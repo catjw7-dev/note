@@ -130,7 +130,7 @@ export default function Sidebar({ notes, tags, onNoteClick, onTagFilter, onAddTa
         </div>
       </div>
 
-      {/* 휴지통 — 유저 바로 위 */}
+      {/* 휴지통 — 유저 바로 위 5px 띄움 */}
       <div className={styles.trashSection}>
         <div
           className={`${styles.item} ${isTrash ? styles.itemActive : ''} ${styles.trashItem}`}

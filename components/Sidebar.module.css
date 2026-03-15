@@ -218,7 +218,6 @@
 
 .trashItem {
   color: rgba(255,255,255,0.45);
-  margin-top: 2px;
 }
 
 .trashItem:hover {
@@ -226,7 +225,8 @@
 }
 
 .trashSection {
-  padding: 4px 12px 4px;
-  border-top: 0.5px solid rgba(255,255,255,0.06);
+  padding: 0 12px;
+  margin-bottom: 5px;
   position: relative;
+  flex-shrink: 0;
 }

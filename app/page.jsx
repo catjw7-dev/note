@@ -272,14 +272,16 @@ export default function GalleryPage() {
               onTouchEnd={handleTouchEnd}
               onTouchMove={handleTouchMove}
             >
-              <div className={styles.cardColor} style={{ background: note.color }} />
-              {note.pinned && (
-                <div className={styles.pinIcon}>
-                  <svg viewBox="0 0 14 14" fill="currentColor" width="11" height="11">
-                    <path d="M9 1L13 5L8 8L6 13L5 9L1 8L6 6Z"/>
-                  </svg>
-                </div>
-              )}
+              <div className={styles.cardTop}>
+                <div className={styles.cardColor} style={{ background: note.color }} />
+                {note.pinned && (
+                  <div className={styles.pinIcon}>
+                    <svg viewBox="0 0 14 14" fill="currentColor" width="11" height="11">
+                      <path d="M9 1L13 5L8 8L6 13L5 9L1 8L6 6Z"/>
+                    </svg>
+                  </div>
+                )}
+              </div>
               <button className={styles.menuBtn} onClick={(e) => handleMenuBtn(e, note.id)}>⋮</button>
 
               {menuId === note.id && (
