@@ -6,7 +6,7 @@ import PinModal from '../components/PinModal'
 import LockModal from '../components/LockModal'
 import TagModal from '../components/TagModal'
 import MobileNav from '../components/MobileNav'
-import { loadNotes, saveNotes, loadTags, saveTags, COLORS } from '../lib/notes'
+import { loadNotes, saveNotes, loadTags, saveTags, loadTrash, saveTrash, COLORS } from '../lib/notes'
 import styles from './page.module.css'
 
 export default function GalleryPage() {
@@ -21,13 +21,14 @@ export default function GalleryPage() {
   const [contextMenu, setContextMenu] = useState(null)
   const [renamingId, setRenamingId] = useState(null)
   const [renameVal, setRenameVal] = useState('')
+  const [trash, setTrash] = useState([])
   const menuRef = useRef(null)
   const contextRef = useRef(null)
   const renameRef = useRef(null)
   const longPressTimer = useRef(null)
   const longPressTriggered = useRef(false)
 
-  useEffect(() => { setNotes(loadNotes()); setTags(loadTags()) }, [])
+  useEffect(() => { setNotes(loadNotes()); setTags(loadTags()); setTrash(loadTrash()) }, [])
 
   useEffect(() => {
     if (renamingId && renameRef.current) renameRef.current.focus()
@@ -88,9 +89,17 @@ export default function GalleryPage() {
   }
 
   const deleteNote = (id) => {
-    const updated = notes.filter(n => n.id !== id)
-    setNotes(updated); saveNotes(updated)
+    const note = notes.find(n => n.id === id)
+    if (!note) return
+    const updatedNotes = notes.filter(n => n.id !== id)
+    const updatedTrash = [...trash, { ...note, deletedAt: new Date().toLocaleDateString('ko-KR') }]
+    setNotes(updatedNotes); saveNotes(updatedNotes)
+    setTrash(updatedTrash); saveTrash(updatedTrash)
     setMenuId(null); setContextMenu(null)
+  }
+
+  const handleEmptyTrash = () => {
+    setTrash([]); saveTrash([])
   }
 
   const openLockModal = (id) => { setMenuId(null); setContextMenu(null); setLockModalId(id) }
@@ -192,7 +201,7 @@ export default function GalleryPage() {
         <div className={styles.dropDivider} />
         <button className={styles.deleteBtn} onClick={(e) => { if (stopProp) e.stopPropagation(); deleteNote(id) }}>
           <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13"><path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/></svg>
-          Delete
+          삭제
         </button>
       </>
     )
@@ -202,11 +211,13 @@ export default function GalleryPage() {
     <div className={styles.app}>
       <Sidebar
         notes={notes} tags={tags} activeTagId={activeTagId}
+        trashCount={trash.length}
         onNoteClick={handleNoteClick}
         onTagFilter={setActiveTagId}
         onAddTag={handleAddTag}
         onDeleteTag={handleDeleteTag}
         onRenameTag={handleRenameTag}
+        onEmptyTrash={handleEmptyTrash}
       />
 
       <main className={styles.main}>
@@ -214,6 +225,7 @@ export default function GalleryPage() {
           <div className={styles.headerLeft}>
             <MobileNav
               notes={notes} tags={tags} activeTagId={activeTagId}
+              trashCount={trash.length}
               onNoteClick={handleNoteClick}
               onTagFilter={setActiveTagId}
               onAddTag={handleAddTag}

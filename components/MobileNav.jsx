@@ -1,9 +1,11 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import styles from './MobileNav.module.css'
 
-export default function MobileNav({ notes, tags, activeTagId, onNoteClick, onTagFilter, onAddTag, onDeleteTag, onRenameTag }) {
+export default function MobileNav({ notes, tags, activeTagId, onNoteClick, onTagFilter, onAddTag, onDeleteTag, onRenameTag, trashCount }) {
   const [open, setOpen] = useState(false)
+  const router = useRouter()
   const recent = [...notes].slice(-3).reverse()
 
   return (
@@ -75,6 +77,16 @@ export default function MobileNav({ notes, tags, activeTagId, onNoteClick, onTag
                   <span className={styles.tagCount}>{notes.filter(n => n.tagId === tag.id).length}</span>
                 </div>
               ))}
+            </div>
+
+            <div className={styles.section}>
+              <div className={styles.item} onClick={() => { router.push('/trash'); setOpen(false) }}>
+                <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.4" width="13" height="13">
+                  <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/>
+                </svg>
+                <span className={styles.itemText}>휴지통</span>
+                {trashCount > 0 && <span className={styles.tagCount}>{trashCount}</span>}
+              </div>
             </div>
 
             <div className={styles.user}>
