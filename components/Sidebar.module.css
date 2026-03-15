@@ -224,3 +224,9 @@
 .trashItem:hover {
   color: rgba(255,255,255,0.8);
 }
+
+.trashSection {
+  padding: 4px 12px 4px;
+  border-top: 0.5px solid rgba(255,255,255,0.06);
+  position: relative;
+}

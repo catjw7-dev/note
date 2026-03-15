@@ -119,6 +119,7 @@ export default function TrashPage() {
       <main className={styles.main}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
+            <button className={styles.backBtn} onClick={() => router.push('/')}>← 갤러리로</button>
             <h1 className={styles.title}>휴지통</h1>
             {trash.length > 0 && (
               <span className={styles.count}>{trash.length}개</span>

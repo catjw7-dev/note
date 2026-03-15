@@ -102,6 +102,12 @@ export default function GalleryPage() {
     setTrash([]); saveTrash([])
   }
 
+  const togglePin = (id) => {
+    const note = notes.find(n => n.id === id)
+    updateNote(id, { pinned: !note?.pinned })
+    setMenuId(null); setContextMenu(null)
+  }
+
   const openLockModal = (id) => { setMenuId(null); setContextMenu(null); setLockModalId(id) }
   const openTagModal = (id) => { setMenuId(null); setContextMenu(null); setTagModalId(id) }
 
@@ -164,14 +170,17 @@ export default function GalleryPage() {
   const handleAddTag = () => setTagModalId('__new__')
 
   const createNote = () => {
-    const newNote = { id: Date.now(), title: '', body: '', locked: false, password: null, color: COLORS[notes.length % COLORS.length], tagId: null, date: '방금' }
+    const newNote = { id: Date.now(), title: '', body: '', locked: false, password: null, color: COLORS[notes.length % COLORS.length], tagId: null, pinned: false, date: '방금' }
     const updated = [...notes, newNote]
     setNotes(updated); saveNotes(updated)
     router.push(`/note/${newNote.id}`)
   }
 
   const currentLockNote = notes.find(n => n.id === lockModalId)
-  const visibleNotes = activeTagId ? notes.filter(n => n.tagId === activeTagId) : notes
+  // 고정된 노트 먼저, 나머지는 원래 순서
+  const sortedNotes = [...(activeTagId ? notes.filter(n => n.tagId === activeTagId) : notes)]
+    .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+  const visibleNotes = sortedNotes
 
   const DropdownItems = ({ id, stopProp }) => {
     const note = notes.find(n => n.id === id)
@@ -179,6 +188,12 @@ export default function GalleryPage() {
     const wrap = (fn) => (e) => { if (stopProp) e.stopPropagation(); fn(id) }
     return (
       <>
+        <button className={styles.dropItem} onClick={wrap(togglePin)}>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13">
+            <path d="M9 1L13 5L8 8L6 13L5 9L1 8L6 6Z"/>
+          </svg>
+          {note.pinned ? '고정 해제' : '고정'}
+        </button>
         <button className={styles.dropItem} onClick={wrap(startRename)}>
           <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13">
             <path d="M2 10V7.5L9.5 1l2.5 2.5L4.5 11H2z"/>
@@ -258,6 +273,13 @@ export default function GalleryPage() {
               onTouchMove={handleTouchMove}
             >
               <div className={styles.cardColor} style={{ background: note.color }} />
+              {note.pinned && (
+                <div className={styles.pinIcon}>
+                  <svg viewBox="0 0 14 14" fill="currentColor" width="11" height="11">
+                    <path d="M9 1L13 5L8 8L6 13L5 9L1 8L6 6Z"/>
+                  </svg>
+                </div>
+              )}
               <button className={styles.menuBtn} onClick={(e) => handleMenuBtn(e, note.id)}>⋮</button>
 
               {menuId === note.id && (

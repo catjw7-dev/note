@@ -222,3 +222,19 @@
   .headerActions { width: 100%; }
   .restoreAllBtn, .emptyBtn { flex: 1; text-align: center; }
 }
+
+.backBtn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #888;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.backBtn:hover {
+  background: #F2F4FF;
+  color: #0C1821;
+}

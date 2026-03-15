@@ -128,30 +128,29 @@ export default function Sidebar({ notes, tags, onNoteClick, onTagFilter, onAddTa
             </div>
           ))}
         </div>
+      </div>
 
-        {/* 휴지통 */}
-        <div className={styles.section}>
-          <div
-            className={`${styles.item} ${isTrash ? styles.itemActive : ''} ${styles.trashItem}`}
-            onClick={() => router.push('/trash')}
-            onContextMenu={e => { e.preventDefault(); setTrashCtx(true) }}
-          >
-            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13">
-              <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/>
-            </svg>
-            <span className={styles.itemText}>휴지통</span>
-            {trashCount > 0 && <span className={styles.tagCount}>{trashCount}</span>}
-          </div>
-
-          {trashCtx && (
-            <div className={styles.tagDropdown} ref={trashRef} style={{ left: 12 }}>
-              <button className={styles.tagDropDelete} onClick={() => { onEmptyTrash(); setTrashCtx(false) }}>
-                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/></svg>
-                휴지통 비우기
-              </button>
-            </div>
-          )}
+      {/* 휴지통 — 유저 바로 위 */}
+      <div className={styles.trashSection}>
+        <div
+          className={`${styles.item} ${isTrash ? styles.itemActive : ''} ${styles.trashItem}`}
+          onClick={() => router.push('/trash')}
+          onContextMenu={e => { e.preventDefault(); setTrashCtx(true) }}
+        >
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13">
+            <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/>
+          </svg>
+          <span className={styles.itemText}>휴지통</span>
+          {trashCount > 0 && <span className={styles.tagCount}>{trashCount}</span>}
         </div>
+        {trashCtx && (
+          <div className={styles.tagDropdown} ref={trashRef} style={{ left: 12 }}>
+            <button className={styles.tagDropDelete} onClick={() => { onEmptyTrash(); setTrashCtx(false) }}>
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/></svg>
+              휴지통 비우기
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={styles.user}>
