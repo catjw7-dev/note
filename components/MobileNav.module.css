@@ -31,6 +31,18 @@
   animation: slideIn 0.2s ease;
 }
 
+.drawerScroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.trashSection {
+  padding: 4px 12px;
+  margin-bottom: 5px;
+  flex-shrink: 0;
+  border-top: 0.5px solid rgba(255,255,255,0.06);
+}
+
 @keyframes slideIn {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }

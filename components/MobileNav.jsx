@@ -33,53 +33,57 @@ export default function MobileNav({ notes, tags, activeTagId, onNoteClick, onTag
               <button className={styles.closeBtn} onClick={() => setOpen(false)}>✕</button>
             </div>
 
-            <div className={styles.section}>
-              <div className={styles.label}>최근 항목</div>
-              {recent.map(note => (
-                <div key={note.id} className={styles.item} onClick={() => { onNoteClick(note.id); setOpen(false) }}>
-                  <div className={styles.dot} style={{ background: note.color }} />
-                  <span className={styles.itemText}>{note.title || '제목 없음'}</span>
+            {/* 스크롤 되는 영역 */}
+            <div className={styles.drawerScroll}>
+              <div className={styles.section}>
+                <div className={styles.label}>최근 항목</div>
+                {recent.map(note => (
+                  <div key={note.id} className={styles.item} onClick={() => { onNoteClick(note.id); setOpen(false) }}>
+                    <div className={styles.dot} style={{ background: note.color }} />
+                    <span className={styles.itemText}>{note.title || '제목 없음'}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <div className={styles.label}>태그</div>
+                  <button className={styles.addTagBtn} onClick={() => { onAddTag(); setOpen(false) }}>
+                    <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M6 1v10M1 6h10"/>
+                    </svg>
+                  </button>
                 </div>
-              ))}
-            </div>
 
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <div className={styles.label}>태그</div>
-                <button className={styles.addTagBtn} onClick={() => { onAddTag(); setOpen(false) }}>
-                  <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M6 1v10M1 6h10"/>
-                  </svg>
-                </button>
-              </div>
-
-              <div
-                className={`${styles.item} ${!activeTagId ? styles.itemActive : ''}`}
-                onClick={() => { onTagFilter(null); setOpen(false) }}
-              >
-                <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.4">
-                  <rect x="1" y="2" width="5" height="5" rx="1"/>
-                  <rect x="8" y="2" width="5" height="5" rx="1"/>
-                  <rect x="1" y="8" width="5" height="5" rx="1"/>
-                  <rect x="8" y="8" width="5" height="5" rx="1"/>
-                </svg>
-                <span>전체</span>
-              </div>
-
-              {tags.map(tag => (
                 <div
-                  key={tag.id}
-                  className={`${styles.item} ${activeTagId === tag.id ? styles.itemActive : ''}`}
-                  onClick={() => { onTagFilter(tag.id); setOpen(false) }}
+                  className={`${styles.item} ${!activeTagId ? styles.itemActive : ''}`}
+                  onClick={() => { onTagFilter(null); setOpen(false) }}
                 >
-                  <div className={styles.tagDot} style={{ background: tag.color }} />
-                  <span className={styles.itemText}>{tag.name}</span>
-                  <span className={styles.tagCount}>{notes.filter(n => n.tagId === tag.id).length}</span>
+                  <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.4">
+                    <rect x="1" y="2" width="5" height="5" rx="1"/>
+                    <rect x="8" y="2" width="5" height="5" rx="1"/>
+                    <rect x="1" y="8" width="5" height="5" rx="1"/>
+                    <rect x="8" y="8" width="5" height="5" rx="1"/>
+                  </svg>
+                  <span>전체</span>
                 </div>
-              ))}
+
+                {tags.map(tag => (
+                  <div
+                    key={tag.id}
+                    className={`${styles.item} ${activeTagId === tag.id ? styles.itemActive : ''}`}
+                    onClick={() => { onTagFilter(tag.id); setOpen(false) }}
+                  >
+                    <div className={styles.tagDot} style={{ background: tag.color }} />
+                    <span className={styles.itemText}>{tag.name}</span>
+                    <span className={styles.tagCount}>{notes.filter(n => n.tagId === tag.id).length}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className={styles.section}>
+            {/* 휴지통 — 유저 바로 위 고정 */}
+            <div className={styles.trashSection}>
               <div className={styles.item} onClick={() => { router.push('/trash'); setOpen(false) }}>
                 <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.4" width="13" height="13">
                   <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/>
