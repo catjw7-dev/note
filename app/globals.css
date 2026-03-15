@@ -1,0 +1,35 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --white: #F2F4FF;
+  --black: #0C1821;
+  --blue: #276FBF;
+  --blue-light: #EAF1FB;
+  --blue-mid: #7BB8F0;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #fff;
+  color: var(--black);
+}
+
+input, textarea, button {
+  font-family: inherit;
+}
+
+/* 모바일 터치 최적화 */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 스크롤바 숨기기 (모바일) */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }

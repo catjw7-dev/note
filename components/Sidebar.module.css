@@ -1,0 +1,217 @@
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  height: 100vh;
+  background: #0C1821;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.logo {
+  padding: 18px 16px 14px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.logoDot {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #276FBF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoText { font-size: 15px; font-weight: 500; color: #fff; }
+.scroll { flex: 1; overflow-y: auto; }
+.section { padding: 14px 12px 8px; }
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+
+.label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.addTagBtn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, background 0.12s;
+}
+
+.addTagBtn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+.tagItemWrap { position: relative; }
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.itemActive { background: rgba(39,111,191,0.25); color: #7BB8F0; }
+
+.itemText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.tagDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* 숫자 + ⋮ 버튼 항상 보이게, 왼쪽으로 붙이기 */
+.tagCount {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.tagMenuBtn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 3px;
+  line-height: 1;
+  flex-shrink: 0;
+  /* 항상 보이게 */
+  opacity: 1;
+}
+
+.tagMenuBtn:hover { color: #fff; }
+
+.renameInput {
+  flex: 1;
+  background: rgba(255,255,255,0.1);
+  border: 0.5px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 13px;
+  padding: 1px 6px;
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.tagDropdown {
+  position: absolute;
+  left: 12px;
+  top: 100%;
+  background: #1a2a36;
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 120px;
+  z-index: 50;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.tagContextMenu {
+  position: fixed;
+  background: #1a2a36;
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 130px;
+  z-index: 300;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+}
+
+.tagDropItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.tagDropItem:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.tagDropDivider { height: 0.5px; background: rgba(255,255,255,0.08); margin: 2px 0; }
+
+.tagDropDelete {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #E24B4A;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.tagDropDelete:hover { background: rgba(226,75,74,0.1); }
+
+.user {
+  padding: 12px 14px;
+  border-top: 0.5px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #276FBF;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.userName { font-size: 13px; font-weight: 500; color: #fff; }
+.userSub { font-size: 11px; color: rgba(255,255,255,0.35); }
+
+/* 모바일 */
+@media (max-width: 768px) {
+  .tagMenuBtn { opacity: 1; }
+}
