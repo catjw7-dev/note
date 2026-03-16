@@ -22,7 +22,8 @@ export default function GalleryPage() {
   const [lockModalId, setLockModalId] = useState(null)
   const [menuId, setMenuId] = useState(null)
   const [moveModalId, setMoveModalId] = useState(null)
-  const [createMenu, setCreateMenu] = useState(false)
+  const [createMenu, setCreateMenu] = useState(false)      // 헤더 버튼
+  const [createCardMenu, setCreateCardMenu] = useState(false) // 갤러리 카드
   const [folderMenuId, setFolderMenuId] = useState(null)
   const [folderLockModal, setFolderLockModal] = useState(null) // { id, mode }
   const [moveFolderId, setMoveFolderId] = useState(null)
@@ -59,6 +60,7 @@ export default function GalleryPage() {
       if (contextRef.current && !contextRef.current.contains(e.target)) setContextMenu(null)
       if (createMenuRef.current && !createMenuRef.current.contains(e.target) &&
           createCardRef.current && !createCardRef.current.contains(e.target)) setCreateMenu(false)
+      if (createCardRef.current && !createCardRef.current.contains(e.target)) setCreateCardMenu(false)
       if (folderMenuRef.current && !folderMenuRef.current.contains(e.target)) setFolderMenuId(null)
     }
     document.addEventListener('mousedown', handleClick)
@@ -212,6 +214,7 @@ export default function GalleryPage() {
     const updated = [...folders, newFolder]
     setFolders(updated); saveFolders(updated)
     setCreateMenu(false)
+    setCreateCardMenu(false)
   }
 
   const handleRenameFolder = (id, name) => {
@@ -265,6 +268,7 @@ export default function GalleryPage() {
     const updated = [...notes, newNote]
     setNotes(updated); saveNotes(updated)
     setCreateMenu(false)
+    setCreateCardMenu(false)
     router.push(`/note/${newNote.id}`)
   }
 
@@ -533,10 +537,10 @@ export default function GalleryPage() {
             </div>
           )}
 
-          <div className={`${styles.card} ${styles.addCard}`} onClick={() => setCreateMenu(m => !m)} ref={createCardRef}>
+          <div className={`${styles.card} ${styles.addCard}`} onClick={() => setCreateCardMenu(m => !m)} ref={createCardRef}>
             <span className={styles.plus}>+</span>
             <span>새로 만들기</span>
-            {createMenu && (
+            {createCardMenu && (
               <div className={styles.createMenu} onClick={e => e.stopPropagation()}>
                 <button className={styles.createMenuItem} onClick={createNote}>
                   <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="14" height="14">
