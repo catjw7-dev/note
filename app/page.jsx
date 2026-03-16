@@ -6,6 +6,7 @@ import PinModal from '../components/PinModal'
 import LockModal from '../components/LockModal'
 import TagModal from '../components/TagModal'
 import MobileNav from '../components/MobileNav'
+import CardPreview from '../components/CardPreview'
 import { loadNotes, saveNotes, loadTags, saveTags, loadTrash, saveTrash, COLORS } from '../lib/notes'
 import styles from './page.module.css'
 
@@ -319,7 +320,7 @@ export default function GalleryPage() {
               ) : (
                 <>
                   <div className={styles.cardTitle}>{note.title || '제목 없음'}</div>
-                  <div className={styles.cardPreview}>{note.body.replace(/\n/g, ' ').slice(0, 60) || '내용 없음'}</div>
+                  <CardPreview content={note.body} />
                 </>
               )}
               <div className={styles.cardDate}>{note.date}</div>
