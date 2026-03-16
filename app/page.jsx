@@ -343,7 +343,9 @@ export default function GalleryPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <MobileNav
-              notes={notes} folders={folders} activeFolderId={activeFolderId}
+              notes={notes} folders={folders}
+              activeFolderId={activeFolderId}
+              activeNoteId={null}
               trashCount={trash.length}
               onNoteClick={handleNoteClick}
               onSelectFolder={setActiveFolderId}

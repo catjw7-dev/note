@@ -3,8 +3,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './MobileNav.module.css'
 
-function FolderItem({ folder, folders, notes, depth, activeFolderId, onSelect, onClose }) {
+function FolderItem({ folder, folders, notes, depth, activeFolderId, activeNoteId, onSelect, onClose, onNoteClick }) {
   const children = folders.filter(f => f.parentId === folder.id)
+  const folderNotes = notes.filter(n => n.folderId === folder.id)
+  const hasChildren = children.length > 0 || folderNotes.length > 0
   const [open, setOpen] = useState(depth === 0)
 
   return (
@@ -16,22 +18,44 @@ function FolderItem({ folder, folders, notes, depth, activeFolderId, onSelect, o
       >
         <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', width: 12, cursor: 'pointer' }}
           onClick={e => { e.stopPropagation(); setOpen(o => !o) }}>
-          {children.length > 0 ? (open ? '▾' : '▸') : ' '}
+          {hasChildren ? (open ? '▾' : '▸') : ' '}
         </span>
         <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1.3" width="13" height="13" style={{ flexShrink: 0 }}>
           <path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/>
         </svg>
         <span className={styles.itemText}>{folder.name}</span>
-        <span className={styles.tagCount}>{notes.filter(n => n.folderId === folder.id).length || ''}</span>
+        <span className={styles.tagCount}>{folderNotes.length || ''}</span>
       </div>
-      {open && children.map(c => (
-        <FolderItem key={c.id} folder={c} folders={folders} notes={notes} depth={depth + 1} activeFolderId={activeFolderId} onSelect={onSelect} onClose={onClose} />
-      ))}
+      {open && (
+        <>
+          {children.map(c => (
+            <FolderItem key={c.id} folder={c} folders={folders} notes={notes}
+              depth={depth + 1} activeFolderId={activeFolderId} activeNoteId={activeNoteId}
+              onSelect={onSelect} onClose={onClose} onNoteClick={onNoteClick} />
+          ))}
+          {folderNotes.map(note => (
+            <div
+              key={note.id}
+              className={`${styles.item} ${activeNoteId === String(note.id) ? styles.itemActive : ''}`}
+              style={{ paddingLeft: 8 + (depth + 1) * 14 }}
+              onClick={() => { onNoteClick(note.id); onClose() }}
+            >
+              <span style={{ width: 12, flexShrink: 0 }} />
+              <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.3" width="12" height="12" style={{ flexShrink: 0 }}>
+                <path d="M3 1h6l3 3v9H3V1z"/><path d="M9 1v3h3"/>
+              </svg>
+              <span className={styles.itemText} style={{ fontSize: 12, opacity: note.locked ? 0.5 : 1 }}>
+                {note.locked ? '🔒 ' : ''}{note.title || '제목 없음'}
+              </span>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   )
 }
 
-export default function MobileNav({ notes, folders, activeFolderId, trashCount, onNoteClick, onSelectFolder, onNewFolder }) {
+export default function MobileNav({ notes, folders, activeFolderId, activeNoteId, trashCount, onNoteClick, onSelectFolder, onNewFolder }) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const recent = [...notes].slice(-3).reverse()
@@ -82,7 +106,8 @@ export default function MobileNav({ notes, folders, activeFolderId, trashCount, 
                 </div>
                 {rootFolders.map(f => (
                   <FolderItem key={f.id} folder={f} folders={folders} notes={notes} depth={0}
-                    activeFolderId={activeFolderId} onSelect={onSelectFolder} onClose={() => setOpen(false)} />
+                    activeFolderId={activeFolderId} activeNoteId={activeNoteId}
+                    onSelect={onSelectFolder} onClose={() => setOpen(false)} onNoteClick={onNoteClick} />
                 ))}
               </div>
             </div>
