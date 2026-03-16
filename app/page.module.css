@@ -329,3 +329,13 @@
   align-items: center;
   margin-bottom: 12px;
 }
+
+.folderCard {
+  border-color: #e8f0fb;
+  background: #fafbff;
+}
+
+.folderCard:hover {
+  border-color: #276FBF;
+  background: #EAF1FB;
+}

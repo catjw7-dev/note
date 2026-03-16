@@ -4,32 +4,36 @@ import { useRouter } from 'next/navigation'
 import Sidebar from '../components/Sidebar'
 import PinModal from '../components/PinModal'
 import LockModal from '../components/LockModal'
-import TagModal from '../components/TagModal'
+import MoveModal from '../components/MoveModal'
 import MobileNav from '../components/MobileNav'
 import CardPreview from '../components/CardPreview'
-import { loadNotes, saveNotes, loadTags, saveTags, loadTrash, saveTrash, COLORS } from '../lib/notes'
+import { loadNotes, saveNotes, loadFolders, saveFolders, loadTrash, saveTrash, COLORS } from '../lib/notes'
 import styles from './page.module.css'
 
 export default function GalleryPage() {
   const router = useRouter()
   const [notes, setNotes] = useState([])
-  const [tags, setTags] = useState([])
+  const [folders, setFolders] = useState([])
+  const [trash, setTrash] = useState([])
+  const [activeFolderId, setActiveFolderId] = useState('root')
   const [lockedId, setLockedId] = useState(null)
   const [lockModalId, setLockModalId] = useState(null)
   const [menuId, setMenuId] = useState(null)
-  const [tagModalId, setTagModalId] = useState(null)
-  const [activeTagId, setActiveTagId] = useState(null)
+  const [moveModalId, setMoveModalId] = useState(null)
   const [contextMenu, setContextMenu] = useState(null)
   const [renamingId, setRenamingId] = useState(null)
   const [renameVal, setRenameVal] = useState('')
-  const [trash, setTrash] = useState([])
   const menuRef = useRef(null)
   const contextRef = useRef(null)
   const renameRef = useRef(null)
   const longPressTimer = useRef(null)
   const longPressTriggered = useRef(false)
 
-  useEffect(() => { setNotes(loadNotes()); setTags(loadTags()); setTrash(loadTrash()) }, [])
+  useEffect(() => {
+    setNotes(loadNotes())
+    setFolders(loadFolders())
+    setTrash(loadTrash())
+  }, [])
 
   useEffect(() => {
     if (renamingId && renameRef.current) renameRef.current.focus()
@@ -59,12 +63,10 @@ export default function GalleryPage() {
   }
 
   const handleContextMenu = (e, id) => {
-    e.preventDefault()
-    setMenuId(null)
+    e.preventDefault(); setMenuId(null)
     setContextMenu({ id, x: e.clientX, y: e.clientY })
   }
 
-  // 모바일 꾹 누르기 → 우클릭
   const handleTouchStart = (e, id) => {
     longPressTriggered.current = false
     longPressTimer.current = setTimeout(() => {
@@ -75,17 +77,11 @@ export default function GalleryPage() {
     }, 500)
   }
 
-  const handleTouchEnd = () => {
-    clearTimeout(longPressTimer.current)
-  }
-
-  const handleTouchMove = () => {
-    clearTimeout(longPressTimer.current)
-  }
+  const handleTouchEnd = () => clearTimeout(longPressTimer.current)
+  const handleTouchMove = () => clearTimeout(longPressTimer.current)
 
   const handleMenuBtn = (e, id) => {
-    e.stopPropagation()
-    setContextMenu(null)
+    e.stopPropagation(); setContextMenu(null)
     setMenuId(prev => prev === id ? null : id)
   }
 
@@ -99,31 +95,17 @@ export default function GalleryPage() {
     setMenuId(null); setContextMenu(null)
   }
 
-  const handleEmptyTrash = () => {
-    setTrash([]); saveTrash([])
-  }
-
-  const togglePin = (id) => {
-    const note = notes.find(n => n.id === id)
-    updateNote(id, { pinned: !note?.pinned })
-    setMenuId(null); setContextMenu(null)
-  }
-
   const openLockModal = (id) => { setMenuId(null); setContextMenu(null); setLockModalId(id) }
-  const openTagModal = (id) => { setMenuId(null); setContextMenu(null); setTagModalId(id) }
+  const openMoveModal = (id) => { setMenuId(null); setContextMenu(null); setMoveModalId(id) }
 
   const startRename = (id) => {
     const note = notes.find(n => n.id === id)
     setMenuId(null); setContextMenu(null)
-    setRenamingId(id)
-    setRenameVal(note?.title || '')
+    setRenamingId(id); setRenameVal(note?.title || '')
   }
 
   const commitRename = () => {
-    if (renamingId) {
-      updateNote(renamingId, { title: renameVal })
-      setRenamingId(null); setRenameVal('')
-    }
+    if (renamingId) { updateNote(renamingId, { title: renameVal }); setRenamingId(null); setRenameVal('') }
   }
 
   const handleLockSuccess = (password) => { updateNote(lockModalId, { locked: true, password }); setLockModalId(null) }
@@ -135,53 +117,60 @@ export default function GalleryPage() {
     return false
   }
 
-  // 버그 수정: 태그 할당 시 색 변경 + null이면 원래 색으로
-  const handleTagAssign = (tagId) => {
-    const tag = tags.find(t => t.id === tagId)
-    const noteIdx = notes.findIndex(n => n.id === tagModalId)
-    const color = tag ? tag.color : COLORS[noteIdx % COLORS.length]
-    updateNote(tagModalId, { tagId, color })
-    setTagModalId(null)
+  const handleMove = (folderId) => {
+    updateNote(moveModalId, { folderId })
+    setMoveModalId(null)
   }
 
-  // 버그 수정: 새 태그 만들기 → id 반환해서 바로 할당 가능
-  const handleCreateTag = ({ name, color }) => {
-    const newTag = { id: Date.now(), name, color }
-    const updated = [...tags, newTag]
-    setTags(updated); saveTags(updated)
-    return newTag // TagModal에서 바로 onAssign에 사용
+  const handleEmptyTrash = () => { setTrash([]); saveTrash([]) }
+
+  const togglePin = (id) => {
+    const note = notes.find(n => n.id === id)
+    updateNote(id, { pinned: !note?.pinned })
+    setMenuId(null); setContextMenu(null)
   }
 
-  const handleDeleteTag = (tagId) => {
-    const updatedTags = tags.filter(t => t.id !== tagId)
-    setTags(updatedTags); saveTags(updatedTags)
-    // 해당 태그 달린 노트들 색 초기화
-    const updatedNotes = notes.map((n, i) =>
-      n.tagId === tagId ? { ...n, tagId: null, color: COLORS[i % COLORS.length] } : n
-    )
+  // 폴더 관리
+  const handleNewFolder = (parentId) => {
+    const newFolder = { id: `f${Date.now()}`, name: '새 폴더', parentId }
+    const updated = [...folders, newFolder]
+    setFolders(updated); saveFolders(updated)
+  }
+
+  const handleRenameFolder = (id, name) => {
+    const updated = folders.map(f => f.id === id ? { ...f, name } : f)
+    setFolders(updated); saveFolders(updated)
+  }
+
+  const handleDeleteFolder = (id) => {
+    // 하위 폴더 재귀 삭제
+    const getAllChildren = (fId) => {
+      const children = folders.filter(f => f.parentId === fId)
+      return [fId, ...children.flatMap(c => getAllChildren(c.id))]
+    }
+    const toDelete = getAllChildren(id)
+    const updatedFolders = folders.filter(f => !toDelete.includes(f.id))
+    // 해당 폴더 노트들 root로 이동
+    const updatedNotes = notes.map(n => toDelete.includes(n.folderId) ? { ...n, folderId: 'root' } : n)
+    setFolders(updatedFolders); saveFolders(updatedFolders)
     setNotes(updatedNotes); saveNotes(updatedNotes)
-    if (activeTagId === tagId) setActiveTagId(null)
+    if (toDelete.includes(activeFolderId)) setActiveFolderId('root')
   }
-
-  const handleRenameTag = (tagId, newName) => {
-    const updated = tags.map(t => t.id === tagId ? { ...t, name: newName } : t)
-    setTags(updated); saveTags(updated)
-  }
-
-  const handleAddTag = () => setTagModalId('__new__')
 
   const createNote = () => {
-    const newNote = { id: Date.now(), title: '', body: '', locked: false, password: null, color: COLORS[notes.length % COLORS.length], tagId: null, pinned: false, date: '방금' }
+    const newNote = { id: Date.now(), title: '', body: '', locked: false, password: null, color: COLORS[notes.length % COLORS.length], folderId: activeFolderId, tagId: null, pinned: false, date: '방금' }
     const updated = [...notes, newNote]
     setNotes(updated); saveNotes(updated)
     router.push(`/note/${newNote.id}`)
   }
 
   const currentLockNote = notes.find(n => n.id === lockModalId)
-  // 고정된 노트 먼저, 나머지는 원래 순서
-  const sortedNotes = [...(activeTagId ? notes.filter(n => n.tagId === activeTagId) : notes)]
+  const currentFolder = folders.find(f => f.id === activeFolderId)
+
+  // 현재 폴더의 노트 + 하위 폴더
+  const folderNotes = [...notes.filter(n => n.folderId === activeFolderId)]
     .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
-  const visibleNotes = sortedNotes
+  const subFolders = folders.filter(f => f.parentId === activeFolderId)
 
   const DropdownItems = ({ id, stopProp }) => {
     const note = notes.find(n => n.id === id)
@@ -190,29 +179,22 @@ export default function GalleryPage() {
     return (
       <>
         <button className={styles.dropItem} onClick={wrap(togglePin)}>
-          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13">
-            <path d="M9 1L13 5L8 8L6 13L5 9L1 8L6 6Z"/>
-          </svg>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13"><path d="M9 1L13 5L8 8L6 13L5 9L1 8L6 6Z"/></svg>
           {note.pinned ? '고정 해제' : '고정'}
         </button>
         <button className={styles.dropItem} onClick={wrap(startRename)}>
-          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13">
-            <path d="M2 10V7.5L9.5 1l2.5 2.5L4.5 11H2z"/>
-          </svg>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13"><path d="M2 10V7.5L9.5 1l2.5 2.5L4.5 11H2z"/></svg>
           Rename
         </button>
-        <button className={styles.dropItem} onClick={wrap(openTagModal)}>
-          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13">
-            <path d="M1 1h5.5l5.5 5.5-5 5L1.5 6V1z"/><circle cx="4" cy="4" r="1"/>
-          </svg>
-          태그
+        <button className={styles.dropItem} onClick={wrap(openMoveModal)}>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13"><path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/></svg>
+          이동
         </button>
         <button className={styles.dropItem} onClick={wrap(openLockModal)}>
-          {note.locked ? (
-            <><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13"><rect x="2" y="6" width="10" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2" strokeDasharray="2 2"/></svg>잠금 해제</>
-          ) : (
-            <><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13"><rect x="2" y="6" width="10" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2"/></svg>잠금</>
-          )}
+          {note.locked
+            ? <><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13"><rect x="2" y="6" width="10" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2" strokeDasharray="2 2"/></svg>잠금 해제</>
+            : <><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="13" height="13"><rect x="2" y="6" width="10" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2"/></svg>잠금</>
+          }
         </button>
         <div className={styles.dropDivider} />
         <button className={styles.deleteBtn} onClick={(e) => { if (stopProp) e.stopPropagation(); deleteNote(id) }}>
@@ -226,44 +208,53 @@ export default function GalleryPage() {
   return (
     <div className={styles.app}>
       <Sidebar
-        notes={notes} tags={tags} activeTagId={activeTagId}
+        notes={notes}
+        folders={folders}
+        activeFolderId={activeFolderId}
         trashCount={trash.length}
-        onNoteClick={handleNoteClick}
-        onTagFilter={setActiveTagId}
-        onAddTag={handleAddTag}
-        onDeleteTag={handleDeleteTag}
-        onRenameTag={handleRenameTag}
+        onSelectFolder={setActiveFolderId}
+        onRenameFolder={handleRenameFolder}
+        onDeleteFolder={handleDeleteFolder}
+        onNewFolder={handleNewFolder}
         onEmptyTrash={handleEmptyTrash}
+        onNoteClick={handleNoteClick}
       />
 
       <main className={styles.main}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <MobileNav
-              notes={notes} tags={tags} activeTagId={activeTagId}
+              notes={notes} folders={folders} activeFolderId={activeFolderId}
               trashCount={trash.length}
               onNoteClick={handleNoteClick}
-              onTagFilter={setActiveTagId}
-              onAddTag={handleAddTag}
-              onDeleteTag={handleDeleteTag}
-              onRenameTag={handleRenameTag}
+              onSelectFolder={setActiveFolderId}
+              onNewFolder={handleNewFolder}
             />
             <div>
-              <h1 className={styles.title}>갤러리</h1>
-            {activeTagId && (
-              <div className={styles.filterBadge}>
-                <div className={styles.filterDot} style={{ background: tags.find(t => t.id === activeTagId)?.color }} />
-                {tags.find(t => t.id === activeTagId)?.name}
-                <span className={styles.filterClear} onClick={() => setActiveTagId(null)}>×</span>
-              </div>
-            )}
+              <h1 className={styles.title}>{currentFolder?.name || '갤러리'}</h1>
             </div>
           </div>
           <button className={styles.newBtn} onClick={createNote}>+ 새 노트</button>
         </div>
 
         <div className={styles.grid}>
-          {visibleNotes.map(note => (
+          {/* 하위 폴더 카드 */}
+          {subFolders.map(folder => (
+            <div
+              key={folder.id}
+              className={`${styles.card} ${styles.folderCard}`}
+              onClick={() => setActiveFolderId(folder.id)}
+            >
+              <svg viewBox="0 0 20 16" fill="none" stroke="#276FBF" strokeWidth="1.3" width="20" height="16" style={{ marginBottom: 8 }}>
+                <path d="M1 4h18v11H1zM1 4l3-3h5l1 3"/>
+              </svg>
+              <div className={styles.cardTitle}>{folder.name}</div>
+              <div className={styles.cardDate}>{notes.filter(n => n.folderId === folder.id).length}개</div>
+            </div>
+          ))}
+
+          {/* 노트 카드 */}
+          {folderNotes.map(note => (
             <div
               key={note.id}
               className={styles.card}
@@ -309,13 +300,10 @@ export default function GalleryPage() {
                     value={renameVal}
                     onChange={e => setRenameVal(e.target.value)}
                     onBlur={commitRename}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') commitRename()
-                      if (e.key === 'Escape') { setRenamingId(null) }
-                    }}
+                    onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setRenamingId(null) }}
                     onClick={e => e.stopPropagation()}
                   />
-                  <div className={styles.cardPreview}>{note.body.replace(/\n/g, ' ').slice(0, 60) || '내용 없음'}</div>
+                  <CardPreview content={note.body} />
                 </>
               ) : (
                 <>
@@ -345,13 +333,11 @@ export default function GalleryPage() {
             <circle cx="300" cy="44" r="14" fill="none" stroke="#276FBF" strokeWidth="0.6" opacity="0.12"/>
             <circle cx="300" cy="44" r="4" fill="#276FBF" opacity="0.2"/>
             <circle cx="100" cy="44" r="22" fill="none" stroke="#0C1821" strokeWidth="0.5" opacity="0.08"/>
-            <circle cx="100" cy="44" r="12" fill="none" stroke="#0C1821" strokeWidth="0.5" opacity="0.06"/>
             <circle cx="500" cy="44" r="22" fill="none" stroke="#0C1821" strokeWidth="0.5" opacity="0.08"/>
-            <circle cx="500" cy="44" r="12" fill="none" stroke="#0C1821" strokeWidth="0.5" opacity="0.06"/>
             <line x1="0" y1="44" x2="250" y2="44" stroke="#0C1821" strokeWidth="0.5" opacity="0.06"/>
             <line x1="350" y1="44" x2="600" y2="44" stroke="#0C1821" strokeWidth="0.5" opacity="0.06"/>
           </svg>
-          <p className={styles.footerText}>노트 {notes.length}개 · 마지막 업데이트 오늘</p>
+          <p className={styles.footerText}>노트 {folderNotes.length}개 · {currentFolder?.name}</p>
         </div>
       </main>
 
@@ -377,23 +363,12 @@ export default function GalleryPage() {
         />
       )}
 
-      {tagModalId && tagModalId !== '__new__' && (
-        <TagModal
-          tags={tags}
-          currentTagId={notes.find(n => n.id === tagModalId)?.tagId ?? null}
-          onAssign={handleTagAssign}
-          onCreateTag={handleCreateTag}
-          onCancel={() => setTagModalId(null)}
-        />
-      )}
-
-      {tagModalId === '__new__' && (
-        <TagModal
-          tags={tags}
-          currentTagId={null}
-          onAssign={() => setTagModalId(null)}
-          onCreateTag={(t) => { handleCreateTag(t); setTagModalId(null) }}
-          onCancel={() => setTagModalId(null)}
+      {moveModalId && (
+        <MoveModal
+          folders={folders}
+          currentFolderId={notes.find(n => n.id === moveModalId)?.folderId}
+          onMove={handleMove}
+          onCancel={() => setMoveModalId(null)}
         />
       )}
     </div>

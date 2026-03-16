@@ -3,21 +3,48 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './MobileNav.module.css'
 
-export default function MobileNav({ notes, tags, activeTagId, onNoteClick, onTagFilter, onAddTag, onDeleteTag, onRenameTag, trashCount }) {
+function FolderItem({ folder, folders, notes, depth, activeFolderId, onSelect, onClose }) {
+  const children = folders.filter(f => f.parentId === folder.id)
+  const [open, setOpen] = useState(depth === 0)
+
+  return (
+    <div>
+      <div
+        className={`${styles.item} ${activeFolderId === folder.id ? styles.itemActive : ''}`}
+        style={{ paddingLeft: 8 + depth * 14 }}
+        onClick={() => { onSelect(folder.id); onClose() }}
+      >
+        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', width: 12, cursor: 'pointer' }}
+          onClick={e => { e.stopPropagation(); setOpen(o => !o) }}>
+          {children.length > 0 ? (open ? '▾' : '▸') : ' '}
+        </span>
+        <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1.3" width="13" height="13" style={{ flexShrink: 0 }}>
+          <path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/>
+        </svg>
+        <span className={styles.itemText}>{folder.name}</span>
+        <span className={styles.tagCount}>{notes.filter(n => n.folderId === folder.id).length || ''}</span>
+      </div>
+      {open && children.map(c => (
+        <FolderItem key={c.id} folder={c} folders={folders} notes={notes} depth={depth + 1} activeFolderId={activeFolderId} onSelect={onSelect} onClose={onClose} />
+      ))}
+    </div>
+  )
+}
+
+export default function MobileNav({ notes, folders, activeFolderId, trashCount, onNoteClick, onSelectFolder, onNewFolder }) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const recent = [...notes].slice(-3).reverse()
+  const rootFolders = folders.filter(f => f.parentId === null)
 
   return (
     <>
-      {/* 상단 헤더 버튼 */}
       <button className={styles.menuToggle} onClick={() => setOpen(true)}>
         <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" width="18" height="18">
           <path d="M2 4h14M2 9h14M2 14h14"/>
         </svg>
       </button>
 
-      {/* 드로어 오버레이 */}
       {open && (
         <div className={styles.overlay} onClick={() => setOpen(false)}>
           <div className={styles.drawer} onClick={e => e.stopPropagation()}>
@@ -33,7 +60,6 @@ export default function MobileNav({ notes, tags, activeTagId, onNoteClick, onTag
               <button className={styles.closeBtn} onClick={() => setOpen(false)}>✕</button>
             </div>
 
-            {/* 스크롤 되는 영역 */}
             <div className={styles.drawerScroll}>
               <div className={styles.section}>
                 <div className={styles.label}>최근 항목</div>
@@ -47,42 +73,20 @@ export default function MobileNav({ notes, tags, activeTagId, onNoteClick, onTag
 
               <div className={styles.section}>
                 <div className={styles.sectionHeader}>
-                  <div className={styles.label}>태그</div>
-                  <button className={styles.addTagBtn} onClick={() => { onAddTag(); setOpen(false) }}>
+                  <div className={styles.label}>폴더</div>
+                  <button className={styles.addTagBtn} onClick={() => { onNewFolder('root'); setOpen(false) }}>
                     <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M6 1v10M1 6h10"/>
                     </svg>
                   </button>
                 </div>
-
-                <div
-                  className={`${styles.item} ${!activeTagId ? styles.itemActive : ''}`}
-                  onClick={() => { onTagFilter(null); setOpen(false) }}
-                >
-                  <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.4">
-                    <rect x="1" y="2" width="5" height="5" rx="1"/>
-                    <rect x="8" y="2" width="5" height="5" rx="1"/>
-                    <rect x="1" y="8" width="5" height="5" rx="1"/>
-                    <rect x="8" y="8" width="5" height="5" rx="1"/>
-                  </svg>
-                  <span>전체</span>
-                </div>
-
-                {tags.map(tag => (
-                  <div
-                    key={tag.id}
-                    className={`${styles.item} ${activeTagId === tag.id ? styles.itemActive : ''}`}
-                    onClick={() => { onTagFilter(tag.id); setOpen(false) }}
-                  >
-                    <div className={styles.tagDot} style={{ background: tag.color }} />
-                    <span className={styles.itemText}>{tag.name}</span>
-                    <span className={styles.tagCount}>{notes.filter(n => n.tagId === tag.id).length}</span>
-                  </div>
+                {rootFolders.map(f => (
+                  <FolderItem key={f.id} folder={f} folders={folders} notes={notes} depth={0}
+                    activeFolderId={activeFolderId} onSelect={onSelectFolder} onClose={() => setOpen(false)} />
                 ))}
               </div>
             </div>
 
-            {/* 휴지통 — 유저 바로 위 고정 */}
             <div className={styles.trashSection}>
               <div className={styles.item} onClick={() => { router.push('/trash'); setOpen(false) }}>
                 <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.4" width="13" height="13">

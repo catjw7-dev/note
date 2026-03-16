@@ -3,63 +3,129 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import styles from './Sidebar.module.css'
 
-export default function Sidebar({ notes, tags, onNoteClick, onTagFilter, onAddTag, onDeleteTag, onRenameTag, onEmptyTrash, activeTagId, trashCount }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const [tagMenuBtn, setTagMenuBtn] = useState(null)
-  const [renamingId, setRenamingId] = useState(null)
-  const [renameVal, setRenameVal] = useState('')
-  const [trashCtx, setTrashCtx] = useState(false)
+function FolderNode({ folder, folders, notes, depth, activeFolderId, onSelectFolder, onRenameFolder, onDeleteFolder, onNewFolder }) {
+  const children = folders.filter(f => f.parentId === folder.id)
+  const noteCount = notes.filter(n => n.folderId === folder.id).length
+  const [open, setOpen] = useState(depth === 0)
+  const [menu, setMenu] = useState(false)
+  const [renaming, setRenaming] = useState(false)
+  const [renameVal, setRenameVal] = useState(folder.name)
   const menuRef = useRef(null)
   const renameRef = useRef(null)
-  const trashRef = useRef(null)
+  const isRoot = folder.id === 'root'
 
   useEffect(() => {
-    const handleClick = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setTagMenuBtn(null)
-      if (trashRef.current && !trashRef.current.contains(e.target)) setTrashCtx(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    if (renaming && renameRef.current) renameRef.current.focus()
+  }, [renaming])
+
+  useEffect(() => {
+    const fn = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenu(false) }
+    document.addEventListener('mousedown', fn)
+    return () => document.removeEventListener('mousedown', fn)
   }, [])
 
-  useEffect(() => {
-    if (renamingId && renameRef.current) renameRef.current.focus()
-  }, [renamingId])
-
-  const startRename = (tag) => {
-    setTagMenuBtn(null)
-    setRenamingId(tag.id)
-    setRenameVal(tag.name)
-  }
-
   const commitRename = () => {
-    if (renameVal.trim()) onRenameTag(renamingId, renameVal.trim())
-    setRenamingId(null)
-    setRenameVal('')
+    if (renameVal.trim()) onRenameFolder(folder.id, renameVal.trim())
+    setRenaming(false)
   }
 
-  const handleTagMenuBtn = (e, id) => {
-    e.stopPropagation()
-    setTagMenuBtn(prev => prev === id ? null : id)
-  }
+  return (
+    <div className={styles.folderNode}>
+      <div
+        className={`${styles.folderRow} ${activeFolderId === folder.id ? styles.folderActive : ''}`}
+        style={{ paddingLeft: 8 + depth * 14 }}
+        onClick={() => { setOpen(o => !o); onSelectFolder(folder.id) }}
+        onContextMenu={e => { e.preventDefault(); setMenu(true) }}
+      >
+        {/* 화살표 */}
+        <span className={`${styles.folderArrow} ${open ? styles.folderArrowOpen : ''}`}>
+          {children.length > 0 ? '›' : ' '}
+        </span>
+        {/* 폴더 아이콘 */}
+        <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1.3" width="13" height="13" style={{ flexShrink: 0 }}>
+          {open
+            ? <path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/>
+            : <path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/>
+          }
+        </svg>
 
-  const TagDropdown = ({ id }) => (
-    <div className={styles.tagDropdown} ref={menuRef}>
-      <button className={styles.tagDropItem} onClick={() => startRename(tags.find(t => t.id === id))}>
-        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 10V7.5L9.5 1l2.5 2.5L4.5 11H2z"/></svg>
-        Rename
-      </button>
-      <div className={styles.tagDropDivider} />
-      <button className={styles.tagDropDelete} onClick={() => { onDeleteTag(id); setTagMenuBtn(null) }}>
-        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/></svg>
-        Delete
-      </button>
+        {renaming ? (
+          <input
+            ref={renameRef}
+            className={styles.folderRenameInput}
+            value={renameVal}
+            onChange={e => setRenameVal(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setRenaming(false) }}
+            onClick={e => e.stopPropagation()}
+          />
+        ) : (
+          <span className={styles.folderName}>{folder.name}</span>
+        )}
+
+        <span className={styles.folderCount}>{noteCount > 0 ? noteCount : ''}</span>
+
+        {/* ⋮ 버튼 */}
+        <button className={styles.folderMenuBtn} onClick={e => { e.stopPropagation(); setMenu(m => !m) }}>⋮</button>
+      </div>
+
+      {/* 드롭다운 */}
+      {menu && (
+        <div className={styles.folderDropdown} ref={menuRef} style={{ left: 8 + depth * 14 }}>
+          <button className={styles.folderDropItem} onClick={() => { onNewFolder(folder.id); setMenu(false) }}>
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/><path d="M7 7v4M5 9h4"/></svg>
+            새 폴더
+          </button>
+          {!isRoot && (
+            <>
+              <button className={styles.folderDropItem} onClick={() => { setRenaming(true); setMenu(false) }}>
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 10V7.5L9.5 1l2.5 2.5L4.5 11H2z"/></svg>
+                Rename
+              </button>
+              <div className={styles.folderDropDivider} />
+              <button className={styles.folderDropDelete} onClick={() => { onDeleteFolder(folder.id); setMenu(false) }}>
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/></svg>
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* 하위 폴더 */}
+      {open && children.map(child => (
+        <FolderNode
+          key={child.id}
+          folder={child}
+          folders={folders}
+          notes={notes}
+          depth={depth + 1}
+          activeFolderId={activeFolderId}
+          onSelectFolder={onSelectFolder}
+          onRenameFolder={onRenameFolder}
+          onDeleteFolder={onDeleteFolder}
+          onNewFolder={onNewFolder}
+        />
+      ))}
     </div>
   )
+}
 
-  const recent = [...notes].slice(-3).reverse()
+export default function Sidebar({ notes, folders, activeFolderId, trashCount, onSelectFolder, onRenameFolder, onDeleteFolder, onNewFolder, onEmptyTrash, onNoteClick }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [trashCtx, setTrashCtx] = useState(false)
+  const trashRef = useRef(null)
   const isTrash = pathname === '/trash'
+  const recent = [...notes].slice(-3).reverse()
+
+  useEffect(() => {
+    const fn = (e) => { if (trashRef.current && !trashRef.current.contains(e.target)) setTrashCtx(false) }
+    document.addEventListener('mousedown', fn)
+    return () => document.removeEventListener('mousedown', fn)
+  }, [])
+
+  const rootFolders = folders.filter(f => f.parentId === null)
 
   return (
     <aside className={styles.sidebar}>
@@ -73,6 +139,7 @@ export default function Sidebar({ notes, tags, onNoteClick, onTagFilter, onAddTa
       </div>
 
       <div className={styles.scroll}>
+        {/* 최근 항목 */}
         <div className={styles.section}>
           <div className={styles.label}>최근 항목</div>
           {recent.map(note => (
@@ -83,54 +150,35 @@ export default function Sidebar({ notes, tags, onNoteClick, onTagFilter, onAddTa
           ))}
         </div>
 
+        {/* 폴더 트리 */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <div className={styles.label}>태그</div>
-            <button className={styles.addTagBtn} onClick={onAddTag}>
+            <div className={styles.label}>폴더</div>
+            <button className={styles.addTagBtn} onClick={() => onNewFolder('root')} title="새 폴더">
               <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M6 1v10M1 6h10"/>
               </svg>
             </button>
           </div>
 
-          <div className={`${styles.item} ${!activeTagId && !isTrash ? styles.itemActive : ''}`} onClick={() => { onTagFilter(null); router.push('/') }}>
-            <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.4">
-              <rect x="1" y="2" width="5" height="5" rx="1"/><rect x="8" y="2" width="5" height="5" rx="1"/>
-              <rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/>
-            </svg>
-            <span className={styles.itemText}>전체</span>
-          </div>
-
-          {tags.map(tag => (
-            <div key={tag.id} className={styles.tagItemWrap}>
-              <div
-                className={`${styles.item} ${activeTagId === tag.id && !isTrash ? styles.itemActive : ''}`}
-                onClick={() => { if (renamingId !== tag.id) { onTagFilter(tag.id); router.push('/') } }}
-              >
-                <div className={styles.tagDot} style={{ background: tag.color }} />
-                {renamingId === tag.id ? (
-                  <input
-                    ref={renameRef}
-                    className={styles.renameInput}
-                    value={renameVal}
-                    onChange={e => setRenameVal(e.target.value)}
-                    onBlur={commitRename}
-                    onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setRenamingId(null) }}
-                    onClick={e => e.stopPropagation()}
-                  />
-                ) : (
-                  <span className={styles.itemText}>{tag.name}</span>
-                )}
-                <span className={styles.tagCount}>{notes.filter(n => n.tagId === tag.id).length}</span>
-                <button className={styles.tagMenuBtn} onClick={e => handleTagMenuBtn(e, tag.id)}>⋮</button>
-              </div>
-              {tagMenuBtn === tag.id && <TagDropdown id={tag.id} />}
-            </div>
+          {rootFolders.map(f => (
+            <FolderNode
+              key={f.id}
+              folder={f}
+              folders={folders}
+              notes={notes}
+              depth={0}
+              activeFolderId={activeFolderId}
+              onSelectFolder={onSelectFolder}
+              onRenameFolder={onRenameFolder}
+              onDeleteFolder={onDeleteFolder}
+              onNewFolder={onNewFolder}
+            />
           ))}
         </div>
       </div>
 
-      {/* 휴지통 — 유저 바로 위 5px 띄움 */}
+      {/* 휴지통 — 유저 바로 위 고정 */}
       <div className={styles.trashSection}>
         <div
           className={`${styles.item} ${isTrash ? styles.itemActive : ''} ${styles.trashItem}`}
