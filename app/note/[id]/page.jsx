@@ -3,8 +3,23 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Sidebar from '../../../components/Sidebar'
 import MarkdownView from '../../../components/MarkdownView'
-import { loadNotes, saveNotes, loadTags, loadTrash, saveTrash } from '../../../lib/notes'
+import { loadNotes, saveNotes, loadTags, loadTrash } from '../../../lib/notes'
 import styles from './page.module.css'
+
+const BLOCK_COMMANDS = [
+  { label: '제목 1', icon: 'H1', syntax: '# ', desc: '큰 제목' },
+  { label: '제목 2', icon: 'H2', syntax: '## ', desc: '중간 제목' },
+  { label: '제목 3', icon: 'H3', syntax: '### ', desc: '작은 제목' },
+  { label: '굵게', icon: 'B', syntax: '**굵게**', desc: '굵은 텍스트' },
+  { label: '기울임', icon: 'I', syntax: '*기울임*', desc: '이탤릭체' },
+  { label: '목록', icon: '•', syntax: '- ', desc: '글머리 기호' },
+  { label: '번호 목록', icon: '1.', syntax: '1. ', desc: '번호 목록' },
+  { label: '인용', icon: '"', syntax: '> ', desc: '인용문' },
+  { label: '코드', icon: '<>', syntax: '`코드`', desc: '인라인 코드' },
+  { label: '코드 블록', icon: '```', syntax: '```\n\n```', desc: '코드 블록' },
+  { label: '구분선', icon: '—', syntax: '---', desc: '수평선' },
+  { label: '체크박스', icon: '☐', syntax: '- [ ] ', desc: '할 일 목록' },
+]
 
 export default function NotePage() {
   const router = useRouter()
@@ -14,16 +29,19 @@ export default function NotePage() {
   const [trash, setTrash] = useState([])
   const [note, setNote] = useState(null)
   const [saveStatus, setSaveStatus] = useState('저장됨')
-  const [preview, setPreview] = useState(false)
+  const [preview, setPreview] = useState(true) // 기본 미리보기
+  const [slashMenu, setSlashMenu] = useState(false)
+  const [slashFilter, setSlashFilter] = useState('')
+  const [slashIndex, setSlashIndex] = useState(0)
   const saveTimer = useRef(null)
+  const textareaRef = useRef(null)
+  const slashPos = useRef(null) // 슬래시 입력 위치
 
   useEffect(() => {
     const all = loadNotes()
     const allTags = loadTags()
     const allTrash = loadTrash()
-    setNotes(all)
-    setTags(allTags)
-    setTrash(allTrash)
+    setNotes(all); setTags(allTags); setTrash(allTrash)
     const found = all.find(n => String(n.id) === String(id))
     if (found) setNote({ ...found })
     else router.push('/')
@@ -45,6 +63,76 @@ export default function NotePage() {
     }, 800)
   }
 
+  const handleBodyKeyDown = (e) => {
+    if (slashMenu) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSlashIndex(i => Math.min(i + 1, filtered.length - 1))
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSlashIndex(i => Math.max(i - 1, 0))
+        return
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        insertBlock(filtered[slashIndex])
+        return
+      }
+      if (e.key === 'Escape') {
+        setSlashMenu(false)
+        return
+      }
+    }
+  }
+
+  const handleBodyInput = (e) => {
+    const val = e.target.value
+    handleChange('body', val)
+
+    const cursor = e.target.selectionStart
+    const textBeforeCursor = val.slice(0, cursor)
+    const lastSlash = textBeforeCursor.lastIndexOf('/')
+
+    if (lastSlash !== -1 && (lastSlash === 0 || textBeforeCursor[lastSlash - 1] === '\n')) {
+      const query = textBeforeCursor.slice(lastSlash + 1)
+      if (!query.includes(' ') && !query.includes('\n')) {
+        setSlashFilter(query)
+        setSlashMenu(true)
+        setSlashIndex(0)
+        slashPos.current = lastSlash
+        return
+      }
+    }
+    setSlashMenu(false)
+  }
+
+  const insertBlock = (cmd) => {
+    if (!cmd || !textareaRef.current) return
+    const textarea = textareaRef.current
+    const val = note.body
+    const slashStart = slashPos.current
+    const cursor = textarea.selectionStart
+    const before = val.slice(0, slashStart)
+    const after = val.slice(cursor)
+    const newVal = before + cmd.syntax + after
+    handleChange('body', newVal)
+    setSlashMenu(false)
+    setSlashFilter('')
+    // 커서 위치 조정
+    setTimeout(() => {
+      const newCursor = slashStart + cmd.syntax.length
+      textarea.setSelectionRange(newCursor, newCursor)
+      textarea.focus()
+    }, 0)
+  }
+
+  const filtered = BLOCK_COMMANDS.filter(c =>
+    c.label.toLowerCase().includes(slashFilter.toLowerCase()) ||
+    c.icon.toLowerCase().includes(slashFilter.toLowerCase())
+  )
+
   const goBack = () => {
     clearTimeout(saveTimer.current)
     const all = loadNotes()
@@ -62,16 +150,11 @@ export default function NotePage() {
   return (
     <div className={styles.app}>
       <Sidebar
-        notes={notes}
-        tags={tags}
-        activeTagId={null}
+        notes={notes} tags={tags} activeTagId={null}
         trashCount={trash.length}
         onNoteClick={(nid) => router.push(`/note/${nid}`)}
         onTagFilter={() => router.push('/')}
-        onAddTag={() => {}}
-        onDeleteTag={() => {}}
-        onRenameTag={() => {}}
-        onEmptyTrash={() => {}}
+        onAddTag={() => {}} onDeleteTag={() => {}} onRenameTag={() => {}} onEmptyTrash={() => {}}
       />
 
       <main className={styles.main}>
@@ -84,16 +167,9 @@ export default function NotePage() {
                 {noteTag.name}
               </div>
             )}
-            {/* 편집 / 미리보기 토글 */}
             <div className={styles.modeToggle}>
-              <button
-                className={`${styles.modeBtn} ${!preview ? styles.modeBtnActive : ''}`}
-                onClick={() => setPreview(false)}
-              >편집</button>
-              <button
-                className={`${styles.modeBtn} ${preview ? styles.modeBtnActive : ''}`}
-                onClick={() => setPreview(true)}
-              >미리보기</button>
+              <button className={`${styles.modeBtn} ${!preview ? styles.modeBtnActive : ''}`} onClick={() => setPreview(false)}>편집</button>
+              <button className={`${styles.modeBtn} ${preview ? styles.modeBtnActive : ''}`} onClick={() => setPreview(true)}>미리보기</button>
             </div>
             <span className={styles.saveStatus}>{saveStatus}</span>
           </div>
@@ -106,7 +182,7 @@ export default function NotePage() {
               <MarkdownView content={note.body} />
             </div>
           ) : (
-            <>
+            <div className={styles.editWrap}>
               <input
                 className={styles.titleInput}
                 placeholder="제목을 입력하세요..."
@@ -114,13 +190,34 @@ export default function NotePage() {
                 onChange={e => handleChange('title', e.target.value)}
                 autoFocus={!note.title}
               />
-              <textarea
-                className={styles.bodyInput}
-                placeholder={`내용을 입력하세요...\n\n마크다운 지원:\n# 제목\n**굵게** *기울임*\n- 목록\n> 인용\n\`코드\``}
-                value={note.body}
-                onChange={e => handleChange('body', e.target.value)}
-              />
-            </>
+              <div className={styles.textareaWrap}>
+                <textarea
+                  ref={textareaRef}
+                  className={styles.bodyInput}
+                  placeholder={'내용을 입력하세요...\n\n/ 를 입력하면 블록을 삽입할 수 있어요'}
+                  value={note.body}
+                  onChange={handleBodyInput}
+                  onKeyDown={handleBodyKeyDown}
+                />
+                {slashMenu && filtered.length > 0 && (
+                  <div className={styles.slashMenu}>
+                    {filtered.map((cmd, i) => (
+                      <div
+                        key={cmd.label}
+                        className={`${styles.slashItem} ${i === slashIndex ? styles.slashItemActive : ''}`}
+                        onMouseDown={(e) => { e.preventDefault(); insertBlock(cmd) }}
+                      >
+                        <span className={styles.slashIcon}>{cmd.icon}</span>
+                        <div>
+                          <div className={styles.slashLabel}>{cmd.label}</div>
+                          <div className={styles.slashDesc}>{cmd.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </main>

@@ -276,7 +276,7 @@ export default function GalleryPage() {
                 <div className={styles.cardColor} style={{ background: note.color }} />
                 {note.pinned && (
                   <div className={styles.pinIcon}>
-                    <svg viewBox="0 0 14 14" fill="none" stroke="#276FBF" strokeWidth="1.5" strokeLinejoin="round" width="12" height="12">
+                    <svg viewBox="0 0 14 14" fill="none" stroke="#0C1821" strokeWidth="1.5" strokeLinejoin="round" width="12" height="12">
                       <path d="M9 1L13 5L8 8L6 13L5 9L1 8L6 6Z"/>
                     </svg>
                   </div>

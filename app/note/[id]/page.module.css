@@ -172,3 +172,74 @@
   margin-bottom: 20px;
   line-height: 1.3;
 }
+
+.editWrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.textareaWrap {
+  flex: 1;
+  position: relative;
+}
+
+.slashMenu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #fff;
+  border: 0.5px solid #e0e4f0;
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(12,24,33,0.12);
+  z-index: 50;
+  overflow: hidden;
+  width: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.slashItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.slashItem:hover {
+  background: #f4f6ff;
+}
+
+.slashItemActive {
+  background: #EAF1FB;
+}
+
+.slashIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f0f2ff;
+  border: 0.5px solid #e0e4f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: #276FBF;
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.slashLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #0C1821;
+}
+
+.slashDesc {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 1px;
+}
