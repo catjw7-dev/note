@@ -1,0 +1,133 @@
+.empty {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.markdown {
+  font-size: 15px;
+  line-height: 1.85;
+  color: #0C1821;
+}
+
+.markdown h1 {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 1.4em 0 0.6em;
+  color: #0C1821;
+  line-height: 1.3;
+}
+
+.markdown h2 {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 1.2em 0 0.5em;
+  color: #0C1821;
+}
+
+.markdown h3 {
+  font-size: 17px;
+  font-weight: 500;
+  margin: 1em 0 0.4em;
+  color: #0C1821;
+}
+
+.markdown p {
+  margin: 0 0 0.9em;
+}
+
+.markdown strong {
+  font-weight: 500;
+  color: #0C1821;
+}
+
+.markdown em {
+  font-style: italic;
+  color: #444;
+}
+
+.markdown ul, .markdown ol {
+  margin: 0.5em 0 0.9em 1.4em;
+}
+
+.markdown li {
+  margin-bottom: 0.3em;
+}
+
+.markdown blockquote {
+  border-left: 3px solid #276FBF;
+  margin: 0.8em 0;
+  padding: 0.4em 1em;
+  color: #555;
+  background: #F2F4FF;
+  border-radius: 0 6px 6px 0;
+}
+
+.markdown blockquote p {
+  margin: 0;
+}
+
+.markdown code {
+  background: #f0f2ff;
+  border: 0.5px solid #e0e4f0;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 13px;
+  font-family: 'Menlo', 'Monaco', monospace;
+  color: #276FBF;
+}
+
+.markdown pre {
+  background: #0C1821;
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 0.8em 0 1em;
+}
+
+.markdown pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #7BB8F0;
+  font-size: 13px;
+}
+
+.markdown hr {
+  border: none;
+  border-top: 0.5px solid #e0e4f0;
+  margin: 1.5em 0;
+}
+
+.markdown a {
+  color: #276FBF;
+  text-decoration: underline;
+}
+
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 14px;
+}
+
+.markdown th {
+  background: #F2F4FF;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 500;
+  border: 0.5px solid #e0e4f0;
+}
+
+.markdown td {
+  padding: 8px 12px;
+  border: 0.5px solid #e0e4f0;
+}
+
+.markdown tr:nth-child(even) td {
+  background: #fafbff;
+}
+
+.markdown input[type="checkbox"] {
+  margin-right: 6px;
+  accent-color: #276FBF;
+}
