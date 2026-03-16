@@ -351,3 +351,21 @@
 }
 
 .folderDropDelete:hover { background: rgba(226,75,74,0.1); }
+
+.noteRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-right: 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.noteRow:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); }
+.noteRow:hover .folderMenuBtn { opacity: 1; }
+.noteActive { background: rgba(39,111,191,0.2) !important; color: #7BB8F0 !important; }

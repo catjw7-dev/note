@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Sidebar from '../../../components/Sidebar'
 import MarkdownView from '../../../components/MarkdownView'
-import { loadNotes, saveNotes, loadTags, loadTrash } from '../../../lib/notes'
+import { loadNotes, saveNotes, loadFolders, loadTrash } from '../../../lib/notes'
 import styles from './page.module.css'
 
 const BLOCK_COMMANDS = [
@@ -25,7 +25,7 @@ export default function NotePage() {
   const router = useRouter()
   const { id } = useParams()
   const [notes, setNotes] = useState([])
-  const [tags, setTags] = useState([])
+  const [folders, setFolders] = useState([])
   const [trash, setTrash] = useState([])
   const [note, setNote] = useState(null)
   const [saveStatus, setSaveStatus] = useState('저장됨')
@@ -39,9 +39,9 @@ export default function NotePage() {
 
   useEffect(() => {
     const all = loadNotes()
-    const allTags = loadTags()
+    const allFolders = loadFolders()
     const allTrash = loadTrash()
-    setNotes(all); setTags(allTags); setTrash(allTrash)
+    setNotes(all); setFolders(allFolders); setTrash(allTrash)
     const found = all.find(n => String(n.id) === String(id))
     if (found) setNote({ ...found })
     else router.push('/')
@@ -145,28 +145,31 @@ export default function NotePage() {
 
   if (!note) return null
 
-  const noteTag = tags.find(t => t.id === note.tagId)
-
   return (
     <div className={styles.app}>
       <Sidebar
-        notes={notes} tags={tags} activeTagId={null}
+        notes={notes}
+        folders={folders}
+        activeFolderId={null}
+        activeNoteId={String(id)}
         trashCount={trash.length}
+        onSelectFolder={() => router.push('/')}
         onNoteClick={(nid) => router.push(`/note/${nid}`)}
-        onTagFilter={() => router.push('/')}
-        onAddTag={() => {}} onDeleteTag={() => {}} onRenameTag={() => {}} onEmptyTrash={() => {}}
+        onNewFolder={() => {}}
+        onRenameFolder={() => {}}
+        onDeleteFolder={() => {}}
+        onRenameNote={() => {}}
+        onMoveNote={() => {}}
+        onLockNote={() => {}}
+        onPinNote={() => {}}
+        onDeleteNote={() => {}}
+        onEmptyTrash={() => {}}
       />
 
       <main className={styles.main}>
         <div className={styles.topBar}>
           <button className={styles.backBtn} onClick={goBack}>← 갤러리로</button>
           <div className={styles.actions}>
-            {noteTag && (
-              <div className={styles.tagBadge} style={{ background: noteTag.color + '22', color: noteTag.color, borderColor: noteTag.color + '44' }}>
-                <div className={styles.tagDot} style={{ background: noteTag.color }} />
-                {noteTag.name}
-              </div>
-            )}
             <div className={styles.modeToggle}>
               <button className={`${styles.modeBtn} ${!preview ? styles.modeBtnActive : ''}`} onClick={() => setPreview(false)}>편집</button>
               <button className={`${styles.modeBtn} ${preview ? styles.modeBtnActive : ''}`} onClick={() => setPreview(true)}>미리보기</button>

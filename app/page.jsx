@@ -211,13 +211,19 @@ export default function GalleryPage() {
         notes={notes}
         folders={folders}
         activeFolderId={activeFolderId}
+        activeNoteId={null}
         trashCount={trash.length}
         onSelectFolder={setActiveFolderId}
+        onNoteClick={handleNoteClick}
+        onNewFolder={handleNewFolder}
         onRenameFolder={handleRenameFolder}
         onDeleteFolder={handleDeleteFolder}
-        onNewFolder={handleNewFolder}
+        onRenameNote={startRename}
+        onMoveNote={openMoveModal}
+        onLockNote={openLockModal}
+        onPinNote={togglePin}
+        onDeleteNote={deleteNote}
         onEmptyTrash={handleEmptyTrash}
-        onNoteClick={handleNoteClick}
       />
 
       <main className={styles.main}>
@@ -314,6 +320,17 @@ export default function GalleryPage() {
               <div className={styles.cardDate}>{note.date}</div>
             </div>
           ))}
+
+          {folderNotes.length === 0 && subFolders.length === 0 && (
+            <div className={styles.emptyState}>
+              <svg viewBox="0 0 48 48" fill="none" stroke="#ddd" strokeWidth="1.5" width="44" height="44">
+                <path d="M8 12h32v28H8zM8 12l5-6h12l3 6"/>
+                <path d="M20 24h8M20 30h5"/>
+              </svg>
+              <p>비어있어요</p>
+              <span>새 노트를 만들거나 폴더를 추가해보세요</span>
+            </div>
+          )}
 
           <div className={`${styles.card} ${styles.addCard}`} onClick={createNote}>
             <span className={styles.plus}>+</span>

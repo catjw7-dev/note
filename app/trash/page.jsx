@@ -2,13 +2,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
-import { loadNotes, loadTags, loadTrash, saveTrash, saveNotes, saveTags, loadTags as lt } from '../../lib/notes'
+import { loadNotes, loadTags, loadTrash, saveTrash, saveNotes, loadFolders, saveFolders } from '../../lib/notes'
 import styles from './page.module.css'
 
 export default function TrashPage() {
   const router = useRouter()
   const [notes, setNotes] = useState([])
-  const [tags, setTags] = useState([])
+  const [folders, setFolders] = useState([])
   const [trash, setTrash] = useState([])
   const [contextMenu, setContextMenu] = useState(null)
   const [menuId, setMenuId] = useState(null)
@@ -19,7 +19,7 @@ export default function TrashPage() {
 
   useEffect(() => {
     setNotes(loadNotes())
-    setTags(loadTags())
+    setFolders(loadFolders())
     setTrash(loadTrash())
   }, [])
 
@@ -106,13 +106,21 @@ export default function TrashPage() {
   return (
     <div className={styles.app}>
       <Sidebar
-        notes={notes} tags={tags} activeTagId={null}
+        notes={notes}
+        folders={folders}
+        activeFolderId={null}
+        activeNoteId={null}
         trashCount={trash.length}
+        onSelectFolder={() => router.push('/')}
         onNoteClick={(id) => router.push(`/note/${id}`)}
-        onTagFilter={() => router.push('/')}
-        onAddTag={() => {}}
-        onDeleteTag={() => {}}
-        onRenameTag={() => {}}
+        onNewFolder={() => {}}
+        onRenameFolder={() => {}}
+        onDeleteFolder={() => {}}
+        onRenameNote={() => {}}
+        onMoveNote={() => {}}
+        onLockNote={() => {}}
+        onPinNote={() => {}}
+        onDeleteNote={() => {}}
         onEmptyTrash={emptyTrash}
       />
 
