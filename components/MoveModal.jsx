@@ -2,8 +2,9 @@
 import { useState } from 'react'
 import styles from './MoveModal.module.css'
 
-function FolderOption({ folder, folders, depth, selected, onSelect }) {
-  const children = folders.filter(f => f.parentId === folder.id)
+function FolderOption({ folder, folders, depth, selected, onSelect, excludeId }) {
+  if (folder.id === excludeId) return null
+  const children = folders.filter(f => f.parentId === folder.id && f.id !== excludeId)
   const [open, setOpen] = useState(depth === 0)
 
   return (
@@ -13,24 +14,25 @@ function FolderOption({ folder, folders, depth, selected, onSelect }) {
         style={{ paddingLeft: 12 + depth * 16 }}
         onClick={() => onSelect(folder.id)}
       >
-        <span
-          className={styles.arrow}
-          onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
-        >{children.length > 0 ? (open ? '▾' : '▸') : ' '}</span>
-        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" width="13" height="13" style={{ flexShrink: 0, opacity: 0.6 }}>
+        <span className={styles.arrow} onClick={e => { e.stopPropagation(); setOpen(o => !o) }}>
+          {children.length > 0 ? (open ? '▾' : '▸') : ' '}
+        </span>
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" width="13" height="13" style={{ opacity: 0.6, flexShrink: 0 }}>
           <path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/>
         </svg>
         <span className={styles.folderName}>{folder.name}</span>
         {selected === folder.id && <span className={styles.check}>✓</span>}
       </div>
       {open && children.map(c => (
-        <FolderOption key={c.id} folder={c} folders={folders} depth={depth + 1} selected={selected} onSelect={onSelect} />
+        <FolderOption key={c.id} folder={c} folders={folders} depth={depth + 1}
+          selected={selected} onSelect={onSelect} excludeId={excludeId} />
       ))}
     </div>
   )
 }
 
-export default function MoveModal({ folders, currentFolderId, onMove, onCancel }) {
+// type: 'note' | 'folder'
+export default function MoveModal({ folders, currentFolderId, excludeId, type = 'note', onMove, onCancel }) {
   const [selected, setSelected] = useState(currentFolderId || 'root')
   const rootFolders = folders.filter(f => f.parentId === null)
 
@@ -38,11 +40,12 @@ export default function MoveModal({ folders, currentFolderId, onMove, onCancel }
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className={styles.popup}>
         <div className={styles.header}>
-          <span className={styles.title}>폴더로 이동</span>
+          <span className={styles.title}>{type === 'folder' ? '폴더 이동' : '노트 이동'}</span>
         </div>
         <div className={styles.folderList}>
           {rootFolders.map(f => (
-            <FolderOption key={f.id} folder={f} folders={folders} depth={0} selected={selected} onSelect={setSelected} />
+            <FolderOption key={f.id} folder={f} folders={folders} depth={0}
+              selected={selected} onSelect={setSelected} excludeId={excludeId} />
           ))}
         </div>
         <div className={styles.actions}>

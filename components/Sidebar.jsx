@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import styles from './Sidebar.module.css'
 
-// 파일 아이콘
 function FileIcon() {
   return (
     <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.3" width="12" height="12" style={{ flexShrink: 0 }}>
@@ -12,8 +11,7 @@ function FileIcon() {
   )
 }
 
-// 폴더 아이콘
-function FolderIcon({ open }) {
+function FolderIcon() {
   return (
     <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1.3" width="13" height="13" style={{ flexShrink: 0 }}>
       <path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/>
@@ -21,90 +19,32 @@ function FolderIcon({ open }) {
   )
 }
 
-// 컨텍스트 메뉴 (폴더용)
-function FolderContextMenu({ onNewFolder, onRename, onDelete, isRoot, style, menuRef }) {
+function LockIcon() {
   return (
-    <div className={styles.folderDropdown} ref={menuRef} style={style}>
-      <button className={styles.folderDropItem} onClick={onNewFolder}>
-        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12">
-          <path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/><path d="M7 7v4M5 9h4"/>
-        </svg>
-        새 폴더
-      </button>
-      {!isRoot && (
-        <>
-          <button className={styles.folderDropItem} onClick={onRename}>
-            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12">
-              <path d="M2 10V7.5L9.5 1l2.5 2.5L4.5 11H2z"/>
-            </svg>
-            Rename
-          </button>
-          <div className={styles.folderDropDivider}/>
-          <button className={styles.folderDropDelete} onClick={onDelete}>
-            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12">
-              <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/>
-            </svg>
-            Delete
-          </button>
-        </>
-      )}
-    </div>
+    <svg viewBox="0 0 12 12" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.3" width="11" height="11" style={{ flexShrink: 0 }}>
+      <rect x="2" y="5" width="8" height="6" rx="1"/><path d="M4 5V3.5a2 2 0 014 0V5"/>
+    </svg>
   )
 }
 
-// 노트용 컨텍스트 메뉴
-function NoteContextMenu({ note, onRename, onMove, onLock, onPin, onDelete, menuRef, style }) {
-  return (
-    <div className={styles.folderDropdown} ref={menuRef} style={style}>
-      <button className={styles.folderDropItem} onClick={onPin}>
-        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12">
-          <path d="M9 1L13 5L8 8L6 13L5 9L1 8L6 6Z"/>
-        </svg>
-        {note?.pinned ? '고정 해제' : '고정'}
-      </button>
-      <button className={styles.folderDropItem} onClick={onRename}>
-        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12">
-          <path d="M2 10V7.5L9.5 1l2.5 2.5L4.5 11H2z"/>
-        </svg>
-        Rename
-      </button>
-      <button className={styles.folderDropItem} onClick={onMove}>
-        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12">
-          <path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/>
-        </svg>
-        이동
-      </button>
-      <button className={styles.folderDropItem} onClick={onLock}>
-        {note?.locked
-          ? <><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><rect x="2" y="6" width="10" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2" strokeDasharray="2 2"/></svg>잠금 해제</>
-          : <><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><rect x="2" y="6" width="10" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2"/></svg>잠금</>
-        }
-      </button>
-      <div className={styles.folderDropDivider}/>
-      <button className={styles.folderDropDelete} onClick={onDelete}>
-        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12">
-          <path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/>
-        </svg>
-        삭제
-      </button>
-    </div>
-  )
-}
-
-// 폴더 노드 (재귀)
-function FolderNode({ folder, folders, notes, depth, activeFolderId, activeNoteId,
+function FolderNode({
+  folder, folders, notes, depth,
+  activeFolderId, activeNoteId,
   onSelectFolder, onNoteClick,
-  onNewFolder, onRenameFolder, onDeleteFolder,
+  onNewFolder, onRenameFolder, onDeleteFolder, onMoveFolder, onLockFolder,
   onRenameNote, onMoveNote, onLockNote, onPinNote, onDeleteNote,
+  unlockedFolderIds,
+  onDragStart, onDragOver, onDrop, onDragEnd, dragOverId, dragItemId,
 }) {
   const children = folders.filter(f => f.parentId === folder.id)
   const folderNotes = notes.filter(n => n.folderId === folder.id)
   const isRoot = folder.id === 'root'
+  const isLocked = folder.locked && !unlockedFolderIds.includes(folder.id)
   const [open, setOpen] = useState(isRoot)
-  const [menu, setMenu] = useState(false) // 'folder' | false
+  const [menu, setMenu] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [renameVal, setRenameVal] = useState(folder.name)
-  const [noteMenu, setNoteMenu] = useState(null) // noteId
+  const [noteMenu, setNoteMenu] = useState(null)
   const menuRef = useRef(null)
   const noteMenuRef = useRef(null)
   const renameRef = useRef(null)
@@ -129,20 +69,36 @@ function FolderNode({ folder, folders, notes, depth, activeFolderId, activeNoteI
 
   const hasChildren = children.length > 0 || folderNotes.length > 0
 
+  const handleFolderClick = () => {
+    if (isLocked) {
+      onLockFolder(folder.id, 'unlock')
+      return
+    }
+    setOpen(o => !o)
+    onSelectFolder(folder.id)
+  }
+
   return (
     <div className={styles.folderNode}>
-      {/* 폴더 행 */}
       <div
-        className={`${styles.folderRow} ${activeFolderId === folder.id ? styles.folderActive : ''}`}
+        className={`${styles.folderRow} ${activeFolderId === folder.id ? styles.folderActive : ''} ${isLocked ? styles.folderLocked : ''} ${dragOverId === folder.id ? styles.folderDragOver : ''} ${dragItemId === folder.id ? styles.folderDragging : ''}`}
         style={{ paddingLeft: 8 + depth * 14 }}
-        onClick={() => { setOpen(o => !o); onSelectFolder(folder.id) }}
-        onContextMenu={e => { e.preventDefault(); setMenu('folder') }}
+        onClick={handleFolderClick}
+        onDoubleClick={() => { if (!isLocked) { setOpen(true); onSelectFolder(folder.id) } }}
+        onContextMenu={e => { e.preventDefault(); if (!isLocked) setMenu('folder') }}
+        draggable={!isLocked}
+        onDragStart={e => onDragStart(e, 'folder', folder.id)}
+        onDragOver={e => onDragOver(e, folder.id)}
+        onDrop={e => onDrop(e, folder.id)}
+        onDragEnd={onDragEnd}
       >
-        <span className={`${styles.folderArrow} ${open && hasChildren ? styles.folderArrowOpen : ''}`}
-          onClick={e => { e.stopPropagation(); setOpen(o => !o) }}>
+        <span
+          className={`${styles.folderArrow} ${open && hasChildren && !isLocked ? styles.folderArrowOpen : ''}`}
+          onClick={e => { e.stopPropagation(); if (!isLocked) setOpen(o => !o) }}
+        >
           {hasChildren ? '›' : ' '}
         </span>
-        <FolderIcon open={open} />
+        <FolderIcon />
         {renaming ? (
           <input
             ref={renameRef}
@@ -154,59 +110,79 @@ function FolderNode({ folder, folders, notes, depth, activeFolderId, activeNoteI
             onClick={e => e.stopPropagation()}
           />
         ) : (
-          <span className={styles.folderName}>{folder.name}</span>
+          <span className={styles.folderName} style={{ filter: isLocked ? 'blur(3px)' : 'none' }}>{folder.name}</span>
         )}
-        <button className={styles.folderMenuBtn} onClick={e => { e.stopPropagation(); setMenu(m => m ? false : 'folder') }}>⋮</button>
+        {isLocked && <LockIcon />}
+        {!isLocked && (
+          <button className={styles.folderMenuBtn} onClick={e => { e.stopPropagation(); setMenu(m => m ? false : 'folder') }}>⋮</button>
+        )}
       </div>
 
+      {/* 폴더 드롭다운 */}
       {menu === 'folder' && (
-        <FolderContextMenu
-          menuRef={menuRef}
-          style={{ left: 8 + depth * 14 }}
-          isRoot={isRoot}
-          onNewFolder={() => { onNewFolder(folder.id); setMenu(false) }}
-          onRename={() => { setRenaming(true); setMenu(false) }}
-          onDelete={() => { onDeleteFolder(folder.id); setMenu(false) }}
-        />
+        <div className={styles.folderDropdown} ref={menuRef} style={{ left: 8 + depth * 14 }}>
+          <button className={styles.folderDropItem} onClick={() => { onNewFolder(folder.id); setMenu(false) }}>
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/><path d="M7 7v4M5 9h4"/></svg>
+            새 폴더
+          </button>
+          {!isRoot && (
+            <>
+              <button className={styles.folderDropItem} onClick={() => { setRenaming(true); setMenu(false) }}>
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 10V7.5L9.5 1l2.5 2.5L4.5 11H2z"/></svg>
+                Rename
+              </button>
+              <button className={styles.folderDropItem} onClick={() => { onMoveFolder(folder.id); setMenu(false) }}>
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/><path d="M9 8l2 2-2 2"/></svg>
+                이동
+              </button>
+              <button className={styles.folderDropItem} onClick={() => { onLockFolder(folder.id, 'lock'); setMenu(false) }}>
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><rect x="2" y="6" width="10" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2"/></svg>
+                잠금
+              </button>
+              <div className={styles.folderDropDivider}/>
+              <button className={styles.folderDropDelete} onClick={() => { onDeleteFolder(folder.id); setMenu(false) }}>
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/></svg>
+                Delete
+              </button>
+            </>
+          )}
+        </div>
       )}
 
-      {/* 펼쳐진 상태에서 하위 폴더 + 노트 */}
-      {open && (
+      {/* 펼쳐진 상태 — 잠긴 폴더면 안 보임 */}
+      {open && !isLocked && (
         <>
           {children.map(child => (
             <FolderNode
-              key={child.id}
-              folder={child}
-              folders={folders}
-              notes={notes}
-              depth={depth + 1}
-              activeFolderId={activeFolderId}
-              activeNoteId={activeNoteId}
-              onSelectFolder={onSelectFolder}
-              onNoteClick={onNoteClick}
-              onNewFolder={onNewFolder}
-              onRenameFolder={onRenameFolder}
-              onDeleteFolder={onDeleteFolder}
-              onRenameNote={onRenameNote}
-              onMoveNote={onMoveNote}
-              onLockNote={onLockNote}
-              onPinNote={onPinNote}
-              onDeleteNote={onDeleteNote}
+              key={child.id} folder={child} folders={folders} notes={notes}
+              depth={depth + 1} activeFolderId={activeFolderId} activeNoteId={activeNoteId}
+              onSelectFolder={onSelectFolder} onNoteClick={onNoteClick}
+              onNewFolder={onNewFolder} onRenameFolder={onRenameFolder}
+              onDeleteFolder={onDeleteFolder} onMoveFolder={onMoveFolder} onLockFolder={onLockFolder}
+              onRenameNote={onRenameNote} onMoveNote={onMoveNote}
+              onLockNote={onLockNote} onPinNote={onPinNote} onDeleteNote={onDeleteNote}
+              unlockedFolderIds={unlockedFolderIds}
+              onDragStart={onDragStart} onDragOver={onDragOver}
+              onDrop={onDrop} onDragEnd={onDragEnd}
+              dragOverId={dragOverId} dragItemId={dragItemId}
             />
           ))}
 
-          {/* 노트 파일들 */}
           {folderNotes.map(note => (
             <div key={note.id} className={styles.folderNode} style={{ position: 'relative' }}>
               <div
-                className={`${styles.noteRow} ${activeNoteId === note.id ? styles.noteActive : ''}`}
+                className={`${styles.noteRow} ${activeNoteId === String(note.id) ? styles.noteActive : ''} ${dragItemId === note.id ? styles.folderDragging : ''}`}
                 style={{ paddingLeft: 8 + (depth + 1) * 14 }}
                 onClick={() => onNoteClick(note.id)}
+                onDoubleClick={() => onNoteClick(note.id)}
                 onContextMenu={e => { e.preventDefault(); setNoteMenu(note.id) }}
+                draggable
+                onDragStart={e => onDragStart(e, 'note', note.id)}
+                onDragEnd={onDragEnd}
               >
                 <span style={{ width: 12, flexShrink: 0 }} />
                 <FileIcon />
-                <span className={styles.folderName} style={{ opacity: note.locked ? 0.5 : 1 }}>
+                <span className={styles.folderName} style={{ opacity: note.locked ? 0.5 : 1, fontSize: 12 }}>
                   {note.locked ? '🔒 ' : ''}{note.title || '제목 없음'}
                 </span>
                 {note.pinned && (
@@ -218,16 +194,31 @@ function FolderNode({ folder, folders, notes, depth, activeFolderId, activeNoteI
               </div>
 
               {noteMenu === note.id && (
-                <NoteContextMenu
-                  note={note}
-                  menuRef={noteMenuRef}
-                  style={{ left: 8 + (depth + 1) * 14 }}
-                  onPin={() => { onPinNote(note.id); setNoteMenu(null) }}
-                  onRename={() => { onRenameNote(note.id); setNoteMenu(null) }}
-                  onMove={() => { onMoveNote(note.id); setNoteMenu(null) }}
-                  onLock={() => { onLockNote(note.id); setNoteMenu(null) }}
-                  onDelete={() => { onDeleteNote(note.id); setNoteMenu(null) }}
-                />
+                <div className={styles.folderDropdown} ref={noteMenuRef} style={{ left: 8 + (depth + 1) * 14 }}>
+                  <button className={styles.folderDropItem} onClick={() => { onPinNote(note.id); setNoteMenu(null) }}>
+                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M9 1L13 5L8 8L6 13L5 9L1 8L6 6Z"/></svg>
+                    {note.pinned ? '고정 해제' : '고정'}
+                  </button>
+                  <button className={styles.folderDropItem} onClick={() => { onRenameNote(note.id); setNoteMenu(null) }}>
+                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 10V7.5L9.5 1l2.5 2.5L4.5 11H2z"/></svg>
+                    Rename
+                  </button>
+                  <button className={styles.folderDropItem} onClick={() => { onMoveNote(note.id); setNoteMenu(null) }}>
+                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M1 4h12v8H1zM1 4l2-2h4l1 2"/></svg>
+                    이동
+                  </button>
+                  <button className={styles.folderDropItem} onClick={() => { onLockNote(note.id); setNoteMenu(null) }}>
+                    {note.locked
+                      ? <><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><rect x="2" y="6" width="10" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2" strokeDasharray="2 2"/></svg>잠금 해제</>
+                      : <><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><rect x="2" y="6" width="10" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2"/></svg>잠금</>
+                    }
+                  </button>
+                  <div className={styles.folderDropDivider}/>
+                  <button className={styles.folderDropDelete} onClick={() => { onDeleteNote(note.id); setNoteMenu(null) }}>
+                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" width="12" height="12"><path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.5 8h6l.5-8"/></svg>
+                    삭제
+                  </button>
+                </div>
               )}
             </div>
           ))}
@@ -240,9 +231,10 @@ function FolderNode({ folder, folders, notes, depth, activeFolderId, activeNoteI
 export default function Sidebar({
   notes, folders, activeFolderId, activeNoteId, trashCount,
   onSelectFolder, onNoteClick,
-  onNewFolder, onRenameFolder, onDeleteFolder,
+  onNewFolder, onRenameFolder, onDeleteFolder, onMoveFolder, onLockFolder,
   onRenameNote, onMoveNote, onLockNote, onPinNote, onDeleteNote,
-  onEmptyTrash,
+  onEmptyTrash, unlockedFolderIds = [],
+  onDragStart, onDragOver, onDrop, onDragEnd, dragOverId, dragItemId,
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -271,7 +263,6 @@ export default function Sidebar({
       </div>
 
       <div className={styles.scroll}>
-        {/* 최근 항목 */}
         {recent.length > 0 && (
           <div className={styles.section}>
             <div className={styles.label}>최근 항목</div>
@@ -284,7 +275,6 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* 폴더 트리 */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <div className={styles.label}>탐색기</div>
@@ -297,29 +287,22 @@ export default function Sidebar({
 
           {rootFolders.map(f => (
             <FolderNode
-              key={f.id}
-              folder={f}
-              folders={folders}
-              notes={notes}
-              depth={0}
-              activeFolderId={activeFolderId}
-              activeNoteId={activeNoteId}
-              onSelectFolder={onSelectFolder}
-              onNoteClick={onNoteClick}
-              onNewFolder={onNewFolder}
-              onRenameFolder={onRenameFolder}
-              onDeleteFolder={onDeleteFolder}
-              onRenameNote={onRenameNote}
-              onMoveNote={onMoveNote}
-              onLockNote={onLockNote}
-              onPinNote={onPinNote}
-              onDeleteNote={onDeleteNote}
+              key={f.id} folder={f} folders={folders} notes={notes}
+              depth={0} activeFolderId={activeFolderId} activeNoteId={activeNoteId}
+              onSelectFolder={onSelectFolder} onNoteClick={onNoteClick}
+              onNewFolder={onNewFolder} onRenameFolder={onRenameFolder}
+              onDeleteFolder={onDeleteFolder} onMoveFolder={onMoveFolder} onLockFolder={onLockFolder}
+              onRenameNote={onRenameNote} onMoveNote={onMoveNote}
+              onLockNote={onLockNote} onPinNote={onPinNote} onDeleteNote={onDeleteNote}
+              unlockedFolderIds={unlockedFolderIds}
+              onDragStart={onDragStart} onDragOver={onDragOver}
+              onDrop={onDrop} onDragEnd={onDragEnd}
+              dragOverId={dragOverId} dragItemId={dragItemId}
             />
           ))}
         </div>
       </div>
 
-      {/* 휴지통 */}
       <div className={styles.trashSection}>
         <div
           className={`${styles.item} ${isTrash ? styles.itemActive : ''} ${styles.trashItem}`}

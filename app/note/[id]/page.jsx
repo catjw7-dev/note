@@ -7,18 +7,18 @@ import { loadNotes, saveNotes, loadFolders, loadTrash } from '../../../lib/notes
 import styles from './page.module.css'
 
 const BLOCK_COMMANDS = [
-  { label: '제목 1', icon: 'H1', syntax: '# ', desc: '큰 제목' },
-  { label: '제목 2', icon: 'H2', syntax: '## ', desc: '중간 제목' },
-  { label: '제목 3', icon: 'H3', syntax: '### ', desc: '작은 제목' },
-  { label: '굵게', icon: 'B', syntax: '**굵게**', desc: '굵은 텍스트' },
-  { label: '기울임', icon: 'I', syntax: '*기울임*', desc: '이탤릭체' },
-  { label: '목록', icon: '•', syntax: '- ', desc: '글머리 기호' },
-  { label: '번호 목록', icon: '1.', syntax: '1. ', desc: '번호 목록' },
-  { label: '인용', icon: '"', syntax: '> ', desc: '인용문' },
-  { label: '코드', icon: '<>', syntax: '`코드`', desc: '인라인 코드' },
-  { label: '코드 블록', icon: '```', syntax: '```\n\n```', desc: '코드 블록' },
-  { label: '구분선', icon: '—', syntax: '---', desc: '수평선' },
-  { label: '체크박스', icon: '☐', syntax: '- [ ] ', desc: '할 일 목록' },
+  { label: '제목 1', icon: 'H1', syntax: '# ', desc: '큰 제목', cursorOffset: 2 },
+  { label: '제목 2', icon: 'H2', syntax: '## ', desc: '중간 제목', cursorOffset: 3 },
+  { label: '제목 3', icon: 'H3', syntax: '### ', desc: '작은 제목', cursorOffset: 4 },
+  { label: '굵게', icon: 'B', syntax: '****', desc: '굵은 텍스트', cursorOffset: 2 },
+  { label: '기울임', icon: 'I', syntax: '**', desc: '이탤릭체', cursorOffset: 1 },
+  { label: '목록', icon: '•', syntax: '- ', desc: '글머리 기호', cursorOffset: 2 },
+  { label: '번호 목록', icon: '1.', syntax: '1. ', desc: '번호 목록', cursorOffset: 3 },
+  { label: '인용', icon: '"', syntax: '> ', desc: '인용문', cursorOffset: 2 },
+  { label: '코드', icon: '<>', syntax: '``', desc: '인라인 코드', cursorOffset: 1 },
+  { label: '코드 블록', icon: '```', syntax: '```\n\n```', desc: '코드 블록', cursorOffset: 4 },
+  { label: '구분선', icon: '—', syntax: '---', desc: '수평선', cursorOffset: 3 },
+  { label: '체크박스', icon: '☐', syntax: '- [ ] ', desc: '할 일 목록', cursorOffset: 6 },
 ]
 
 export default function NotePage() {
@@ -29,7 +29,7 @@ export default function NotePage() {
   const [trash, setTrash] = useState([])
   const [note, setNote] = useState(null)
   const [saveStatus, setSaveStatus] = useState('저장됨')
-  const [preview, setPreview] = useState(true) // 기본 미리보기
+  const [preview, setPreview] = useState(false)
   const [slashMenu, setSlashMenu] = useState(false)
   const [slashFilter, setSlashFilter] = useState('')
   const [slashIndex, setSlashIndex] = useState(0)
@@ -43,7 +43,11 @@ export default function NotePage() {
     const allTrash = loadTrash()
     setNotes(all); setFolders(allFolders); setTrash(allTrash)
     const found = all.find(n => String(n.id) === String(id))
-    if (found) setNote({ ...found })
+    if (found) {
+      setNote({ ...found })
+      // 내용 없으면 편집 모드, 있으면 미리보기
+      setPreview(!!(found.body?.trim()))
+    }
     else router.push('/')
   }, [id])
 
@@ -120,9 +124,9 @@ export default function NotePage() {
     handleChange('body', newVal)
     setSlashMenu(false)
     setSlashFilter('')
-    // 커서 위치 조정
+    // 커서를 syntax 안쪽으로 (cursorOffset 위치)
     setTimeout(() => {
-      const newCursor = slashStart + cmd.syntax.length
+      const newCursor = slashStart + (cmd.cursorOffset ?? cmd.syntax.length)
       textarea.setSelectionRange(newCursor, newCursor)
       textarea.focus()
     }, 0)
@@ -148,21 +152,16 @@ export default function NotePage() {
   return (
     <div className={styles.app}>
       <Sidebar
-        notes={notes}
-        folders={folders}
-        activeFolderId={null}
-        activeNoteId={String(id)}
+        notes={notes} folders={folders}
+        activeFolderId={null} activeNoteId={String(id)}
         trashCount={trash.length}
+        unlockedFolderIds={[]}
         onSelectFolder={() => router.push('/')}
         onNoteClick={(nid) => router.push(`/note/${nid}`)}
-        onNewFolder={() => {}}
-        onRenameFolder={() => {}}
-        onDeleteFolder={() => {}}
-        onRenameNote={() => {}}
-        onMoveNote={() => {}}
-        onLockNote={() => {}}
-        onPinNote={() => {}}
-        onDeleteNote={() => {}}
+        onNewFolder={() => {}} onRenameFolder={() => {}}
+        onDeleteFolder={() => {}} onMoveFolder={() => {}} onLockFolder={() => {}}
+        onRenameNote={() => {}} onMoveNote={() => {}}
+        onLockNote={() => {}} onPinNote={() => {}} onDeleteNote={() => {}}
         onEmptyTrash={() => {}}
       />
 

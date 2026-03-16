@@ -7,6 +7,7 @@ import styles from './page.module.css'
 
 export default function TrashPage() {
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
   const [notes, setNotes] = useState([])
   const [folders, setFolders] = useState([])
   const [trash, setTrash] = useState([])
@@ -21,6 +22,7 @@ export default function TrashPage() {
     setNotes(loadNotes())
     setFolders(loadFolders())
     setTrash(loadTrash())
+    setMounted(true)
   }, [])
 
   useEffect(() => {
@@ -103,24 +105,21 @@ export default function TrashPage() {
     </>
   )
 
+  if (!mounted) return null
+
   return (
     <div className={styles.app}>
       <Sidebar
-        notes={notes}
-        folders={folders}
-        activeFolderId={null}
-        activeNoteId={null}
+        notes={notes} folders={folders}
+        activeFolderId={null} activeNoteId={null}
         trashCount={trash.length}
+        unlockedFolderIds={[]}
         onSelectFolder={() => router.push('/')}
         onNoteClick={(id) => router.push(`/note/${id}`)}
-        onNewFolder={() => {}}
-        onRenameFolder={() => {}}
-        onDeleteFolder={() => {}}
-        onRenameNote={() => {}}
-        onMoveNote={() => {}}
-        onLockNote={() => {}}
-        onPinNote={() => {}}
-        onDeleteNote={() => {}}
+        onNewFolder={() => {}} onRenameFolder={() => {}}
+        onDeleteFolder={() => {}} onMoveFolder={() => {}} onLockFolder={() => {}}
+        onRenameNote={() => {}} onMoveNote={() => {}}
+        onLockNote={() => {}} onPinNote={() => {}} onDeleteNote={() => {}}
         onEmptyTrash={emptyTrash}
       />
 

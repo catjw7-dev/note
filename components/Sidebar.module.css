@@ -369,3 +369,17 @@
 .noteRow:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); }
 .noteRow:hover .folderMenuBtn { opacity: 1; }
 .noteActive { background: rgba(39,111,191,0.2) !important; color: #7BB8F0 !important; }
+
+.folderLocked {
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.folderDragOver {
+  background: rgba(39,111,191,0.3) !important;
+  color: #7BB8F0 !important;
+}
+
+.folderDragging {
+  opacity: 0.4;
+}
